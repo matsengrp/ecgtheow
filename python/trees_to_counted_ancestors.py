@@ -67,8 +67,9 @@ if __name__ == '__main__':
             continue
         c.update(seqs_of_tree(t, args.seed))
 
-    fasta_dict = SeqIO.to_dict(SeqIO.parse(args.fasta_path, "fasta"))
-    leaf_seqs = { k:str(fasta_dict[k].seq) for k in fasta_dict }
+    leaf_seqs = {
+        k:str(v.seq) for k,v in
+        SeqIO.to_dict(SeqIO.parse(args.fasta_path, "fasta")).items() }
 
     # Make a reversed dictionary for two special sequences.
     special_seqs = {}
