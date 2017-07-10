@@ -3,6 +3,13 @@
 Please only commit changes to Jupyter/Sage notebooks after clearing output.
 
 
+# Requirements
+
+- sagemath.org (I think that this installs Jupyter notebook functionality. Either way, update this README.)
+- biopython.org
+- https://pythonhosted.org/DendroPy/
+
+
 # Example usage
 
 First we process the BEAST runs into ancestors with their counts:
