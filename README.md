@@ -12,11 +12,15 @@ Please only commit changes to Jupyter/Sage notebooks after clearing output.
 
 # Example usage
 
-First we process the BEAST runs into ancestors with their counts:
+First pull the runs, etc.
+
+    ./pull-ignored.sh
+
+Then we process the BEAST runs into ancestors with their counts:
 
     python/trees_to_counted_ancestors.py --burnin 100 --seed BF520.1-igh runs/2017-07-10/BF520.1-h-IgH.family_0.healthy.tre.seedpruned.100.ids.trees data/2017-07-10/BF520.1-h-IgH.family_0.healthy.tre.seedpruned.100.ids.fasta
 
-(this takes about 10 mins on my chromebook; to try it out use ten.trees instead).
+(this takes about 10 mins on my chromebook).
 
 Now tabulate the mutations:
 
