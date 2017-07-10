@@ -26,3 +26,4 @@ This makes `runs/2017-07-10/BF520.1-h-IgH.family_0.healthy.tre.seedpruned.100.id
 
 Now start sage with `sage -n jupyter` in the ecgtheow root directory.
 Open `sage/sage.ipynb`.
+Run all the cells.
