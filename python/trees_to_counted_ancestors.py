@@ -67,6 +67,9 @@ if __name__ == '__main__':
             continue
         c.update(seqs_of_tree(t, args.seed))
 
+    if c.most_common() == []:
+        raise Exception ("Nothing to count! Is your burnin too large?")
+
     leaf_seqs = {
         k:str(v.seq) for k,v in
         SeqIO.to_dict(SeqIO.parse(args.fasta_path, "fasta")).items() }
