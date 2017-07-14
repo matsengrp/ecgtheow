@@ -143,6 +143,9 @@ if __name__ == '__main__':
 
     for ((a,b), count) in edge_c.most_common(None):
         if a != b and count >= args.filter:
+            # Edge confidence measured by percentage of transitions from parent node (i.e. in [0,100]),
+            # which is then mapped to the interval [20,100] to avoid transparent edges.
+            # Node confidence is treated in a similar fashion below.
             edge_conf = int(20 + (100-20) * float(count) / node_c[a])
             dot.edge(seqs_out[a], seqs_out[b], xlabel=" ".join(format_label(find_muts(a, b))), color="#000000" + (str(edge_conf) if edge_conf < 100 else ""))
 
