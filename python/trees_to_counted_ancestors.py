@@ -133,8 +133,7 @@ if __name__ == '__main__':
             f.write('>{}\n'.format(k))
             f.write('{}\n'.format(v))
 
-    dot = graphviz.Digraph(comment=" ".join(sys.argv), format='png')
-    dot.attr(size='24,14', ratio='fill', fontsize='14')
+    dot = graphviz.Digraph(comment=" ".join(sys.argv), format='png', graph_attr=[('size','24,14'), ('ratio','fill'), ('fontsize','14')])
 
 # Commented because it defeats our filtering mechanism below. Could re-add if
 # we want to add extra information to nodes.
