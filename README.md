@@ -25,7 +25,7 @@ Now, run BEAST using the previously created XML file:
     mv BF520.1-h-IgH.family_0.healthy.tre.seedpruned.100.ids.* ${ECGTHEOW_ROOT}/runs/2017-07-10
     cd ${ECGTHEOW_ROOT}
 
-Alternatively, you can pull the runs from `stoat`.
+Alternatively, you can pull the runs from `stoat`:
 
     ./pull-ignored.sh
 
