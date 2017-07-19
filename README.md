@@ -21,7 +21,7 @@ Now, run BEAST using the previously created XML file:
     cp -r beast/plugins ${BEAST_ROOT}
     mv runs/2017-07-10/BF520.1-h-IgH.family_0.healthy.tre.seedpruned.100.ids.xml ${BEAST_ROOT}
     cd ${BEAST_ROOT}
-    java -jar lib/beast.jar -seed 0 -overwrite BF520.1-h-IgH.family_0.healthy.tre.seedpruned.100.ids.xml
+    java -jar lib/beast.jar -seed 0 BF520.1-h-IgH.family_0.healthy.tre.seedpruned.100.ids.xml
     mv BF520.1-h-IgH.family_0.healthy.tre.seedpruned.100.ids.* ${ECGTHEOW_ROOT}/runs/2017-07-10
     cd ${ECGTHEOW_ROOT}
 
