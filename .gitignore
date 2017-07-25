@@ -1,4 +1,5 @@
 .ipynb_checkpoints
-runs
 data
+inferences
+runs
 *.pyc
