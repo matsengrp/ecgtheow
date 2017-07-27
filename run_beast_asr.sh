@@ -54,8 +54,8 @@ do
       shift 2
       NARGS=$((NARGS-2))
       ;;
-    --asr-count-filter)
-      ASR_COUNT_FILTER="$2"
+    --asr-nfilter)
+      ASR_NFILTER="$2"
       shift 2
       NARGS=$((NARGS-2))
       ;;
@@ -70,7 +70,7 @@ if [ -z "${NPRUNE}" ]; then NPRUNE=100; fi
 if [ -z "${MCMC_ITER}" ]; then MCMC_ITER=10000000; fi
 if [ -z "${MCMC_THIN}" ]; then MCMC_THIN=1000; fi
 if [ -z "${MCMC_BURNIN}" ]; then MCMC_BURNIN=1000; fi
-if [ -z "${ASR_COUNT_FILTER}" ]; then ASR_COUNT_FILTER=100; fi
+if [ -z "${ASR_NFILTER}" ]; then ASR_NFILTER=100; fi
 
 if [ -z "${NAIVE}" ] || [ -z "${SEED}" ] || [ -z "${BEAST_DIR}" ] || [ -z "${CLONE_DIR}" ]
   then
@@ -105,4 +105,4 @@ if [ -e "${SEED}.family_0.healthy.seedpruned.${NPRUNE}.log" ]
 fi
 
 # Summarize the BEAST results.
-python/trees_to_counted_ancestors.py --seed ${SEED} --burnin ${MCMC_BURNIN} --filter ${ASR_COUNT_FILTER} runs/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.trees data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta
+python/trees_to_counted_ancestors.py --seed ${SEED} --burnin ${MCMC_BURNIN} --filter ${ASR_NFILTER} runs/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.trees data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta

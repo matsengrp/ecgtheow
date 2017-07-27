@@ -29,4 +29,4 @@ The full set of command line arguments is described in the following table:
 | `--mcmc-iter` | The number of total MCMC iterations run in BEAST (defaults to 10000000). |
 | `--mcmc-thin` | The MCMC sampling frequency used in BEAST (defaults to 1000). |
 | `--mcmc-burnin` | The number of MCMC samples thrown away due to burn-in (defaults to 1000). |
-| `--asr-count-filter` | The threshold used to filter out infrequent ancestral sequence transitions in the MCMC samples (defaults to 100). |
+| `--asr-nfilter` | The threshold used to filter out infrequent ancestral sequence transitions in the MCMC samples (defaults to 100). |
