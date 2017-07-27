@@ -90,7 +90,7 @@ ${CLONE_DIR}/pandis/healthy_to_fasta.py data/${SEED}.family_0.csv
 ${CLONE_DIR}/pandis/get_naives.py data/${SEED}.csv >> data/${SEED}.family_0.healthy.fasta
 
 # Generate a tree and prune sequences from the clonal family.
-fasttree -nt data/${SEED}.family_0.healthy.fasta > data/${SEED}.family_0.healthy.tre
+FastTree -nt data/${SEED}.family_0.healthy.fasta > data/${SEED}.family_0.healthy.tre
 ${CLONE_DIR}/cft/bin/prune.py --naive ${NAIVE} --seed ${SEED} data/${SEED}.family_0.healthy.tre -n ${NPRUNE} --strategy seed_lineage > data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids
 seqmagick convert --include-from-file data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids data/${SEED}.family_0.healthy.fasta data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta
 
