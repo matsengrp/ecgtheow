@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eu
+set -e
 
 # Parse the command line arguments.
 NARGS="$#"
