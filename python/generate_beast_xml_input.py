@@ -31,7 +31,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     fasta_path = args.fasta_path.lstrip("./")
-    _, date, filename = re.split("/", args.fasta_path)
+    _, filename = re.split("/", args.fasta_path)
 
     id_seq = {
         k:str(v.seq) for k,v in
@@ -50,5 +50,5 @@ if __name__ == '__main__':
                              undefined=jinja2.StrictUndefined,
                              trim_blocks=True, lstrip_blocks=True)
 
-    xml_path = "runs/" + date + "/" + temp_vars["basename"] + ".xml"
+    xml_path = "runs/" + temp_vars["basename"] + ".xml"
     env.get_template(args.template_path).stream(**temp_vars).dump(xml_path)

@@ -13,25 +13,20 @@ Please only commit changes to Jupyter/Sage notebooks after clearing output.
 
 # Example usage
 
-To generate a BEAST XML input file, run the following command:
+The `run_beast_asr.sh` shell script executes the entire ancestral sequence reconstruction pipeline.  An example is given below:
 
-    python/generate_beast_xml_input.py --naive naive0 --seed BF520.1-igh templates/beast_template.xml data/2017-07-10/BF520.1-h-IgH.family_0.healthy.tre.seedpruned.100.ids.fasta
+    ./run_beast_asr.sh --naive naive0 --seed BF520.1-igh --beast-dir /usr/local/BEASTv1.8.4/ --clone-dir ~/
 
-Now, run BEAST using the previously created XML file:
+The full set of command line arguments is described in the following table:
 
-    cp -r beast/plugins ${BEAST_ROOT}
-    mv runs/2017-07-10/BF520.1-h-IgH.family_0.healthy.tre.seedpruned.100.ids.xml ${BEAST_ROOT}
-    cd ${BEAST_ROOT}
-    java -jar lib/beast.jar -seed 0 BF520.1-h-IgH.family_0.healthy.tre.seedpruned.100.ids.xml
-    mv BF520.1-h-IgH.family_0.healthy.tre.seedpruned.100.ids.* ${ECGTHEOW_ROOT}/runs/2017-07-10
-    cd ${ECGTHEOW_ROOT}
-
-Alternatively, you can pull the runs from `stoat`:
-
-    ./pull-ignored.sh
-
-Then, we process the BEAST runs into a graph and a list of sequences:
-
-    python/trees_to_counted_ancestors.py --seed BF520.1-igh --burnin 1000 --filter 100 runs/2017-07-10/BF520.1-h-IgH.family_0.healthy.tre.seedpruned.100.ids.trees data/2017-07-10/BF520.1-h-IgH.family_0.healthy.tre.seedpruned.100.ids.fasta
-
-(this takes about 10 mins on my chromebook).
+| Command | Description |
+| ---     | ---         |
+| `--naive` | The name of the naive sequence. |
+| `--seed` | The name of the seed sequence. |
+| `--beast-dir` | The absolute path of the BEAST program. |
+| `--clone-dir` | The relative path of the cloned `cft` and `pandis` repositories. |
+| `--nprune` | The number of sequences to keep from the `cft` pruning step (defaults to 100). |
+| `--mcmc-iter` | The number of total MCMC iterations run in BEAST (defaults to 10000000). |
+| `--mcmc-thin` | The MCMC sampling frequency used in BEAST (defaults to 1000). |
+| `--mcmc-burnin` | The number of MCMC samples thrown away due to burn-in (defaults to 1000). |
+| `--asr-count-filter` | The threshold used to filter out infrequent ancestral sequence transitions in the MCMC samples (defaults to 100). |
