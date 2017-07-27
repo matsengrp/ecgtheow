@@ -24,7 +24,7 @@ The full set of command line arguments is described in the following table:
 | `--naive` | The name of the naive sequence. |
 | `--seed` | The name of the seed sequence. |
 | `--beast-dir` | The absolute path of the BEAST program. |
-| `--clone-dir` | The relative path of the cloned `cft` and `pandis` repositories. |
+| `--clone-dir` | The absolute path of the cloned `cft` and `pandis` repositories. |
 | `--nprune` | The number of sequences to keep from the `cft` pruning step (defaults to 100). |
 | `--mcmc-iter` | The number of total MCMC iterations run in BEAST (defaults to 10000000). |
 | `--mcmc-thin` | The MCMC sampling frequency used in BEAST (defaults to 1000). |
