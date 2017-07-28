@@ -1,9 +1,9 @@
-# Guidelines
-
-Please only commit changes to Jupyter/Sage notebooks after clearing output.
-
-
 # Requirements
+
+BEAST (http://beast.community/)
+FastTree (http://www.microbesonline.org/fasttree/)
+
+Python modules:
 
     conda install -y -c etetoolkit ete3 ete3_external_apps
     conda install -y biopython graphviz python-graphviz pandas
