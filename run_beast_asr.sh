@@ -29,11 +29,6 @@ do
       shift 2
       NARGS=$((NARGS-2))
       ;;
-    --clone-dir)
-      CLONE_DIR="${2%/}"
-      shift 2
-      NARGS=$((NARGS-2))
-      ;;
     --nprune)
       NPRUNE="$2"
       shift 2
@@ -72,9 +67,9 @@ if [ -z "${MCMC_THIN}" ]; then MCMC_THIN=1000; fi
 if [ -z "${MCMC_BURNIN}" ]; then MCMC_BURNIN=1000; fi
 if [ -z "${ASR_NFILTER}" ]; then ASR_NFILTER=100; fi
 
-if [ -z "${NAIVE}" ] || [ -z "${SEED}" ] || [ -z "${BEAST_DIR}" ] || [ -z "${CLONE_DIR}" ]
+if [ -z "${NAIVE}" ] || [ -z "${SEED}" ] || [ -z "${BEAST_DIR}" ]
   then
-    echo "ERROR: Please specify the '--naive', '--seed', '--beast-dir', and '--clone-dir' arguments."
+    echo "ERROR: Please specify the '--naive', '--seed', and '--beast-dir' arguments."
     exit 1
 fi
 
@@ -85,13 +80,13 @@ mkdir -p data runs
 scp stoat:/fh/fast/matsen_e/processed-data/partis/laura-mb/v9/seeds/${SEED}/BF520-h-IgG/run-viterbi-best-plus-0.csv data/${SEED}.csv
 
 # Create the unpruned FASTA file (containing both the naive and seed sequences).
-${CLONE_DIR}/pandis/transpose_family.py data/${SEED}.csv
-${CLONE_DIR}/pandis/healthy_to_fasta.py data/${SEED}.family_0.csv
-${CLONE_DIR}/pandis/get_naives.py data/${SEED}.csv >> data/${SEED}.family_0.healthy.fasta
+lib/pandis/transpose_family.py data/${SEED}.csv
+lib/pandis/healthy_to_fasta.py data/${SEED}.family_0.csv
+lib/pandis/get_naives.py data/${SEED}.csv >> data/${SEED}.family_0.healthy.fasta
 
 # Generate a tree and prune sequences from the clonal family.
 FastTree -nt data/${SEED}.family_0.healthy.fasta > data/${SEED}.family_0.healthy.tre
-${CLONE_DIR}/cft/bin/prune.py --naive ${NAIVE} --seed ${SEED} data/${SEED}.family_0.healthy.tre -n ${NPRUNE} --strategy seed_lineage > data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids
+lib/cft/bin/prune.py --naive ${NAIVE} --seed ${SEED} data/${SEED}.family_0.healthy.tre -n ${NPRUNE} --strategy seed_lineage > data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids
 seqmagick convert --include-from-file data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids data/${SEED}.family_0.healthy.fasta data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta
 
 # Construct the BEAST XML input file.

@@ -15,7 +15,7 @@ Please only commit changes to Jupyter/Sage notebooks after clearing output.
 
 The `run_beast_asr.sh` shell script executes the entire ancestral sequence reconstruction pipeline.  An example is given below:
 
-    ./run_beast_asr.sh --naive naive0 --seed BF520.1-igh --beast-dir /usr/local/BEASTv1.8.4/ --clone-dir ~/
+    ./run_beast_asr.sh --naive naive0 --seed BF520.1-igh --beast-dir /usr/local/BEASTv1.8.4/
 
 The full set of command line arguments is described in the following table:
 
@@ -24,7 +24,6 @@ The full set of command line arguments is described in the following table:
 | `--naive` | The name of the naive sequence. |
 | `--seed` | The name of the seed sequence. |
 | `--beast-dir` | The absolute path of the BEAST program. |
-| `--clone-dir` | The absolute path where the cloned `cft` and `pandis` repositories are stored. |
 | `--nprune` | The number of sequences to keep from the `cft` pruning step (defaults to 100). |
 | `--mcmc-iter` | The number of total MCMC iterations run in BEAST (defaults to 10000000). |
 | `--mcmc-thin` | The MCMC sampling frequency used in BEAST (defaults to 1000). |

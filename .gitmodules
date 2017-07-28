@@ -1,0 +1,6 @@
+[submodule "lib/cft"]
+	path = lib/cft
+	url = https://github.com/matsengrp/cft.git
+[submodule "lib/pandis"]
+	path = lib/pandis
+	url = https://github.com/matsen/pandis.git
