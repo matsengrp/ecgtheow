@@ -47,46 +47,43 @@ if __name__ == '__main__':
     seq1_set = seq1_keys - seq2_keys
     seq2_set = seq2_keys - seq1_keys
 
-    print "FILE1 && FILE2:\n"
+    rgx_a = re.compile("^inferred_[0-9]+_([0-9]+)$")
+    rgx_b = re.compile("^([0-9]+)$")
+
+    print "FILE1 & FILE2:\n"
 
     for elem in seq12_set:
-        if re.compile("^inferred_[0-9]+_([0-9]+)$").findall(seq1_id1[elem]):
-            if int(re.compile("^inferred_[0-9]+_([0-9]+)$").findall(seq1_id1[elem])[0]) < args.filter:
-                continue
-        if re.compile("^inferred_[0-9]+_([0-9]+)$").findall(seq2_id2[elem]):
-            if int(re.compile("^inferred_[0-9]+_([0-9]+)$").findall(seq2_id2[elem])[0]) < args.filter:
-                continue
-        if re.compile("^([0-9]+)$").findall(seq1_id1[elem]):
-            if int(re.compile("^([0-9]+)$").findall(seq1_id1[elem])[0]) < args.filter:
-                continue
-        if re.compile("^([0-9]+)$").findall(seq2_id2[elem]):
-            if int(re.compile("^([0-9]+)$").findall(seq2_id2[elem])[0]) < args.filter:
-                continue
-        if seq1_id1[elem] == args.naive or seq1_id1[elem] == args.seed:
-            continue
+        check1_a = rgx_a.findall(seq1_id1[elem])
+        check2_a = rgx_a.findall(seq2_id2[elem])
+        check1_b = rgx_b.findall(seq1_id1[elem])
+        check2_b = rgx_b.findall(seq2_id2[elem])
+
+        if check1_a and int(check1_a[0]) < args.filter: continue
+        if check2_a and int(check2_a[0]) < args.filter: continue
+        if check1_b and int(check1_b[0]) < args.filter: continue
+        if check2_b and int(check2_b[0]) < args.filter: continue
+        if seq1_id1[elem] == args.naive or seq1_id1[elem] == args.seed: continue
 
         print seq1_id1[elem] + " <---> " + seq2_id2[elem]
 
     print "\nFILE1 ONLY:\n"
 
     for elem in seq1_set:
-        if re.compile("^inferred_[0-9]+_([0-9]+)$").findall(seq1_id1[elem]):
-            if int(re.compile("^inferred_[0-9]+_([0-9]+)$").findall(seq1_id1[elem])[0]) < args.filter:
-                continue
-        if re.compile("^([0-9]+)$").findall(seq1_id1[elem]):
-            if int(re.compile("^([0-9]+)$").findall(seq1_id1[elem])[0][0]) < args.filter:
-                continue
+        check_a = rgx_a.findall(seq1_id1[elem])
+        check_b = rgx_b.findall(seq1_id1[elem])
+
+        if check_a and int(check_a[0]) < args.filter: continue
+        if check_b and int(check_b[0]) < args.filter: continue
 
         print seq1_id1[elem]
 
     print "\nFILE2 ONLY:\n"
 
     for elem in seq2_set:
-        if re.compile("^inferred_[0-9]+_([0-9]+)$").findall(seq2_id2[elem]):
-            if int(re.compile("^inferred_[0-9]+_([0-9]+)$").findall(seq2_id2[elem])[0]) < args.filter:
-                continue
-        if re.compile("^([0-9]+)$").findall(seq2_id2[elem]):
-            if int(re.compile("^([0-9]+)$").findall(seq2_id2[elem])[0][0]) < args.filter:
-                continue
+        check_a = rgx_a.findall(seq2_id2[elem])
+        check_b = rgx_b.findall(seq2_id2[elem])
+
+        if check_a and int(check_a[0]) < args.filter: continue
+        if check_b and int(check_b[0]) < args.filter: continue
 
         print seq2_id2[elem]

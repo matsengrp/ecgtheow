@@ -9,6 +9,7 @@ Python modules:
     conda install -y -c etetoolkit ete3 ete3_external_apps
     conda install -y biopython graphviz python-graphviz pandas
     conda install -y -c bioconda colorbrewer dendropy=4.2.0
+    pip install jinja2
     pip install seqmagick
 
 
