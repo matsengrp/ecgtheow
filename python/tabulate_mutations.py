@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 
 import argparse
-from collections import OrderedDict
 import os
 
-from Bio import SeqIO
+from util_functions import parse_fasta_seqs
 
 
 class MutRecord:
@@ -33,9 +32,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    seqs = OrderedDict(
-        (r.id, str(r.seq)) for r in
-        SeqIO.parse(args.fasta_path, "fasta"))
+    seqs = parse_fasta_seqs(args.fasta_path)
 
     naive = seqs[args.naive]
     muts = [MutRecord(k, find_muts(naive, s)) for k, s in seqs.items()]

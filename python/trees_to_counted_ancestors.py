@@ -8,13 +8,13 @@ from collections import OrderedDict
 import os
 import sys
 
-from Bio import SeqIO
 from Bio.Alphabet import IUPAC
 from Bio.Seq import Seq
 import dendropy
 import graphviz
 
 from tabulate_mutations import find_muts
+from util_functions import parse_fasta_seqs
 
 
 def format_label(label):
@@ -60,7 +60,7 @@ if __name__ == '__main__':
         'fasta_path', type=str,
         help="Path to FASTA input alignment.")
     parser.add_argument(
-        '--burnin', required=True,
+        '--burnin', type=int, required=True,
         help="How many entries to remove as burnin.")
     parser.add_argument(
         '--seed', required=True,
@@ -70,11 +70,8 @@ if __name__ == '__main__':
         help="Only display edges with at least this many samples.")
 
     args = parser.parse_args()
-    burnin = int(args.burnin)
 
-    leaf_seqs = {
-        k:str(v.seq) for k,v in
-        SeqIO.to_dict(SeqIO.parse(args.fasta_path, "fasta")).items() }
+    leaf_seqs = parse_fasta_seqs(args.fasta_path)
 
     # Make a reversed dictionary for two special sequences.
     special_seqs = {}
@@ -95,7 +92,7 @@ if __name__ == '__main__':
     node_c = Counter()
     edge_c = Counter()
     for tree_idx, t in enumerate(tree_yielder):
-        if tree_idx < burnin:
+        if tree_idx < args.burnin:
             # Skip burnin.
             continue
         l = seqs_of_tree(t, args.seed)
@@ -133,7 +130,8 @@ if __name__ == '__main__':
             f.write('>{}\n'.format(k))
             f.write('{}\n'.format(v))
 
-    dot = graphviz.Digraph(comment=" ".join(sys.argv), format='png', graph_attr=[('size','24,14'), ('ratio','fill'), ('fontsize','14')])
+    dot = graphviz.Digraph(comment=" ".join(sys.argv), format='png',
+                           graph_attr=[('size','24,14'), ('ratio','fill'), ('fontsize','14')])
 
 # Commented because it defeats our filtering mechanism below. Could re-add if
 # we want to add extra information to nodes.
@@ -146,7 +144,8 @@ if __name__ == '__main__':
             # which is then mapped to the interval [20,100] to avoid transparent edges.
             # Node confidence is treated in a similar fashion below.
             edge_conf = int(20 + (100-20) * float(count) / node_c[a])
-            dot.edge(seqs_out[a], seqs_out[b], xlabel=" ".join(format_label(find_muts(a, b))), color="#0000ff" + (str(edge_conf) if edge_conf < 100 else ""), fontsize='11')
+            dot.edge(seqs_out[a], seqs_out[b], xlabel=" ".join(format_label(find_muts(a, b))),
+                     color="#0000ff" + (str(edge_conf) if edge_conf < 100 else ""), fontsize='11')
 
             if seqs_out[a] != "naive0":
                 child_conf = int(10 + (100-10) * float(node_c[a]) / num_trees)

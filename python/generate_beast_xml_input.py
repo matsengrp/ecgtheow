@@ -4,7 +4,8 @@ import argparse
 import jinja2
 import os
 import re
-from Bio import SeqIO
+
+from util_functions import parse_fasta_seqs
 
 
 if __name__ == '__main__':
@@ -30,21 +31,21 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    fasta_path = args.fasta_path.lstrip("./")
+    args.fasta_path = args.fasta_path.lstrip("./")
     _, filename = re.split("/", args.fasta_path)
 
-    id_seq = {
-        k:str(v.seq) for k,v in
-        SeqIO.to_dict(SeqIO.parse(args.fasta_path, "fasta")).items() }
+    id_seq = parse_fasta_seqs(args.fasta_path)
 
     assert args.naive in id_seq, "Sequence %r not found in FASTA file." % args.naive
     assert args.seed in id_seq, "Sequence %r not found in FASTA file." % args.seed
 
-    temp_vars = dict(id_seq=id_seq,
-                     naive=args.naive,
-                     iter=args.iter,
-                     thin=args.thin,
-                     basename=os.path.splitext(filename)[0])
+    temp_vars = dict(
+        id_seq=id_seq,
+        naive=args.naive,
+        iter=args.iter,
+        thin=args.thin,
+        basename=os.path.splitext(filename)[0]
+    )
 
     env = jinja2.Environment(loader = jinja2.FileSystemLoader('.'),
                              undefined=jinja2.StrictUndefined,
