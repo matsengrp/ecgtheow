@@ -8,13 +8,11 @@ from collections import OrderedDict
 import os
 import sys
 
-from Bio.Alphabet import IUPAC
-from Bio.Seq import Seq
 import dendropy
 import graphviz
 
 from tabulate_mutations import find_muts
-from util_functions import parse_fasta_seqs
+from util_functions import parse_fasta_seqs, translate, write_to_fasta
 
 
 def format_label(label):
@@ -41,14 +39,6 @@ def seqs_of_tree(t, seed):
         lineage.append(n)
 
     return [translate(n.annotations.get_value('ancestral')) for n in lineage]
-
-
-def translate(s):
-    '''
-    Assume we are in frame and translate to amino acids
-    '''
-    coding_dna = Seq(s[:(3*int(len(s)/3))], IUPAC.unambiguous_dna)
-    return str(coding_dna.translate())
 
 
 if __name__ == '__main__':
@@ -124,11 +114,7 @@ if __name__ == '__main__':
     seqs_out = {v:k for k,v in out_seqs.iteritems()}
 
     base, _ = os.path.splitext(args.tree_path)
-
-    with open(base+'.aa_lineage_seqs.fasta', 'w') as f:
-        for k, v in out_seqs.items():
-            f.write('>{}\n'.format(k))
-            f.write('{}\n'.format(v))
+    write_to_fasta(out_seqs, base+'.aa_lineage_seqs.fasta')
 
     dot = graphviz.Digraph(comment=" ".join(sys.argv), format='png',
                            graph_attr=[('size','24,14'), ('ratio','fill'), ('fontsize','14')])
