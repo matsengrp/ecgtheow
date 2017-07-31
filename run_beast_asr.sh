@@ -29,6 +29,11 @@ do
       shift 2
       NARGS=$((NARGS-2))
       ;;
+    --beagle-dir)
+      BEAGLE_DIR="${2%/}"
+      shift 2
+      NARGS=$((NARGS-2))
+      ;;
     --nprune)
       NPRUNE="$2"
       shift 2
@@ -67,9 +72,9 @@ if [ -z "${MCMC_THIN}" ]; then MCMC_THIN=1000; fi
 if [ -z "${MCMC_BURNIN}" ]; then MCMC_BURNIN=1000; fi
 if [ -z "${ASR_NFILTER}" ]; then ASR_NFILTER=100; fi
 
-if [ -z "${NAIVE}" ] || [ -z "${SEED}" ] || [ -z "${BEAST_DIR}" ]
+if [ -z "${NAIVE}" ] || [ -z "${SEED}" ] || [ -z "${BEAST_DIR}" ] || [ -z "${BEAGLE_DIR}" ]
   then
-    echo "ERROR: Please specify the '--naive', '--seed', and '--beast-dir' arguments."
+    echo "ERROR: Please specify the '--naive', '--seed', '--beast-dir', and '--beagle-dir' arguments."
     exit 1
 fi
 
@@ -93,7 +98,7 @@ seqmagick convert --include-from-file data/${SEED}.family_0.healthy.seedpruned.$
 python/generate_beast_xml_input.py --naive ${NAIVE} --seed ${SEED} templates/beast_template.xml data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta --iter ${MCMC_ITER} --thin ${MCMC_THIN}
 
 # Run BEAST.
-java -Xms64m -Xmx2048m -Dbeast.plugins.dir=beast/plugins -jar ${BEAST_DIR}/lib/beast.jar -warnings -seed 1 -overwrite runs/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.xml
+java -Xms64m -Xmx2048m -Djava.library.path=${BEAGLE_DIR} -Dbeast.plugins.dir=beast/plugins -jar ${BEAST_DIR}/lib/beast.jar -warnings -seed 1 -overwrite runs/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.xml
 if [ -e "${SEED}.family_0.healthy.seedpruned.${NPRUNE}.log" ]
   then
     mv ${SEED}.family_0.healthy.seedpruned.${NPRUNE}.* runs/
