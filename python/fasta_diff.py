@@ -7,14 +7,12 @@ import re
 from util_functions import parse_fasta_seqs
 
 
-def filter_beast_seqs(seqs, seq_id, rgxs, nfilter):
+def filter_beast_seqs(seqs, seq_id, rgx, nfilter):
     filtered_seqs = set()
     for seq in seqs:
-        for rgx in rgxs:
-            check = rgx.findall(seq_id[seq])
-            if check and int(check[0]) >= nfilter:
-                filtered_seqs.add(seq)
-                break
+        check = rgx.findall(seq_id[seq])
+        if not check or (check and int(check[0]) >= nfilter):
+            filtered_seqs.add(seq)
 
     return filtered_seqs
 
@@ -36,12 +34,12 @@ if __name__ == '__main__':
     seq1_id1 = parse_fasta_seqs(args.file1_path, invert=True)
     seq2_id2 = parse_fasta_seqs(args.file2_path, invert=True)
 
-    rgxs = [re.compile("^inferred_[0-9]+_([0-9]+)$"), re.compile("^([0-9]+)$")]
+    rgx = re.compile("^inferred_[0-9]+_([0-9]+)$")
 
     seq1_keys = set(seq1_id1)
     seq2_keys = set(seq2_id2)
-    seq1_keys = filter_beast_seqs(seq1_keys, seq1_id1, rgxs, args.filter)
-    seq2_keys = filter_beast_seqs(seq2_keys, seq2_id2, rgxs, args.filter)
+    seq1_keys = filter_beast_seqs(seq1_keys, seq1_id1, rgx, args.filter)
+    seq2_keys = filter_beast_seqs(seq2_keys, seq2_id2, rgx, args.filter)
 
     seq12_set = seq1_keys & seq2_keys
     seq1_set = seq1_keys - seq2_keys
