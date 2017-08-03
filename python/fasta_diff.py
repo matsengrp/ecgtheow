@@ -45,17 +45,20 @@ if __name__ == '__main__':
     seq1_set = seq1_keys - seq2_keys
     seq2_set = seq2_keys - seq1_keys
 
-    print "FILE1 & FILE2:\n"
+    print "FILE1 & FILE2:\n\n"
 
-    for elem in seq12_set:
-        print seq1_id1[elem] + " <---> " + seq2_id2[elem]
+    for seq in seq12_set:
+        print seq1_id1[seq] + " <---> " + seq2_id2[seq]
+        print seq + "\n"
 
-    print "\nFILE1 ONLY:\n"
+    print "\nFILE1 ONLY:\n\n"
 
-    for elem in seq1_set:
-        print seq1_id1[elem]
+    for seq in seq1_set:
+        print seq1_id1[seq]
+        print seq + "\n"
 
-    print "\nFILE2 ONLY:\n"
+    print "\nFILE2 ONLY:\n\n"
 
-    for elem in seq2_set:
-        print seq2_id2[elem]
+    for seq in seq2_set:
+        print seq2_id2[seq]
+        print seq + "\n"
