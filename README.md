@@ -27,6 +27,9 @@ The full set of command line arguments is described in the following table:
 | `--seed` | The name of the seed sequence. |
 | `--beast-dir` | The absolute path of the BEAST program. |
 | `--beagle-dir` | The absolute path of the BEAGLE libraries. |
+| `--cft-version` | The version of `cft` used (defaults to `v9`). |
+| `--chain` | The antibody chain of interest (defaults to `h`). |
+| `--isotype` | The antibody chain isotype of interest (defaults to `G`). |
 | `--nprune` | The number of sequences to keep from the `cft` pruning step (defaults to 100). |
 | `--mcmc-iter` | The number of total MCMC iterations run in BEAST (defaults to 10000000). |
 | `--mcmc-thin` | The MCMC sampling frequency used in BEAST (defaults to 1000). |
