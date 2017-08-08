@@ -48,7 +48,7 @@ if __name__ == '__main__':
     print "FILE1 & FILE2:\n\n"
 
     for seq in seq12_set:
-        print ">" + seq1_id1[seq] + " and " + seq2_id2[seq]
+        print ">" + seq1_id1[seq] + "_and_" + seq2_id2[seq]
         print seq + "\n"
 
     print "\nFILE1 ONLY:\n\n"
