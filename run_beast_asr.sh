@@ -102,7 +102,7 @@ if [ "${FAIL}" -eq 1 ]; then exit 1; fi
 mkdir -p data runs
 
 # Grab the sequences from stoat.
-scp stoat:/fh/fast/matsen_e/processed-data/partis/laura-mb/v9/seeds/${SEED}-ig${CHAIN}/${SEED%%.*}-${CHAIN}-Ig${ISOTYPE}/run-viterbi-best-plus-0.csv data/${SEED}-ig${CHAIN}.csv
+scp stoat:/fh/fast/matsen_e/processed-data/partis/laura-mb/${CFT_VERSION}/seeds/${SEED}-ig${CHAIN}/${SEED%%.*}-${CHAIN}-Ig${ISOTYPE}/run-viterbi-best-plus-0.csv data/${SEED}-ig${CHAIN}.csv
 
 # Create the unpruned FASTA file (containing both the naive and seed sequences).
 lib/pandis/transpose_family.py data/${SEED}-ig${CHAIN}.csv

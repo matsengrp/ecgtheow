@@ -17,7 +17,7 @@ Python modules:
 
 The `run_beast_asr.sh` shell script executes the entire ancestral sequence reconstruction pipeline.  An example is given below:
 
-    ./run_beast_asr.sh --naive naive0 --seed BF520.1-igh --beast-dir /usr/local/BEASTv1.8.4/ --beagle-dir /usr/local/lib/
+    ./run_beast_asr.sh --naive naive0 --seed BF520.1 --beast-dir /usr/local/BEASTv1.8.4/ --beagle-dir /usr/local/lib/
 
 The full set of command line arguments is described in the following table:
 
@@ -28,8 +28,8 @@ The full set of command line arguments is described in the following table:
 | `--beast-dir` | The absolute path of the BEAST program. |
 | `--beagle-dir` | The absolute path of the BEAGLE libraries. |
 | `--cft-version` | The version of `cft` used (defaults to `v9`). |
-| `--chain` | The antibody chain of interest (defaults to `h`). |
-| `--isotype` | The antibody chain isotype of interest (defaults to `G`). |
+| `--chain` | The antibody chain of interest h, k, or l (defaults to `h`). |
+| `--isotype` | The antibody chain isotype of interest G, K, or L (defaults to `G`). |
 | `--nprune` | The number of sequences to keep from the `cft` pruning step (defaults to 100). |
 | `--mcmc-iter` | The number of total MCMC iterations run in BEAST (defaults to 10000000). |
 | `--mcmc-thin` | The MCMC sampling frequency used in BEAST (defaults to 1000). |
