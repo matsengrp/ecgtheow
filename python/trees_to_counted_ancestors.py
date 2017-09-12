@@ -2,6 +2,7 @@
 
 import argparse
 from collections import Counter
+from itertools import groupby
 import math
 import numpy as np
 from collections import OrderedDict
@@ -38,7 +39,7 @@ def seqs_of_tree(t, seed):
             break  # We are done.
         lineage.append(n)
 
-    return [translate(n.annotations.get_value('ancestral')) for n in lineage]
+    return [n.annotations.get_value('ancestral') for n in lineage]
 
 
 if __name__ == '__main__':
@@ -75,18 +76,28 @@ if __name__ == '__main__':
 
     source_files = [args.tree_path]
     tree_yielder = dendropy.Tree.yield_from_files(
-            files=source_files,
-            schema='nexus',
-            )
+        files=source_files,
+        schema='nexus',
+    )
 
     node_c = Counter()
+    node_dt = {}
     edge_c = Counter()
     for tree_idx, t in enumerate(tree_yielder):
         if tree_idx < args.burnin:
             # Skip burnin.
             continue
         l = seqs_of_tree(t, args.seed)
-        l.append(translate(leaf_seqs['naive0']))
+        l.append(leaf_seqs['naive0'])
+
+        # Update the (AA:(DNA Counter)) node dict.
+        for k, g in groupby(l, lambda seq: translate(seq)):
+            if k in node_dt:
+                node_dt[k].update(frozenset(g))
+            else:
+                node_dt[k] = Counter(frozenset(g))
+
+        l = [translate(seq) for seq in l]
         node_c.update(frozenset(l))
         # Note flipped below because we want to go from ancestor to descendant.
         edge_c.update((w, v) for v, w in zip(l[:-1], l[1:]))
@@ -95,10 +106,11 @@ if __name__ == '__main__':
     num_trees = node_c.most_common(1)[0][1]
 
     if node_c.most_common() == []:
-        raise Exception ("Nothing to count! Is your burnin too large?")
-    out_seqs = OrderedDict()
+        raise Exception("Nothing to count! Is your burnin too large?")
 
     # Iterate through all, in order of frequency.
+    out_seqs = OrderedDict()
+    aa_dna_map = OrderedDict()
     for idx, (s, count) in enumerate(node_c.most_common(None)):
         # Rename the naive and seed sequences correspondingly if they are in
         # our list.
@@ -106,6 +118,9 @@ if __name__ == '__main__':
             out_seqs[special_seqs[s]] = s
         else:
             out_seqs['inferred_{}_{}'.format(idx,count)] = s
+            aa_dna_map['inferred_{}_{}'.format(idx,count)] = [
+                str(cnt) + "," + dna_seq for (dna_seq, cnt) in node_dt[s].most_common(None)
+            ]
 
     if 'naive0' not in out_seqs:
         out_seqs['naive0'] = translate(leaf_seqs['naive0'])
@@ -115,6 +130,12 @@ if __name__ == '__main__':
 
     base, _ = os.path.splitext(args.tree_path)
     write_to_fasta(out_seqs, base+'.aa_lineage_seqs.fasta')
+
+    with open(base+'.aa_lineage_seqs.dnamap', 'w') as f:
+        for k, v in aa_dna_map.items():
+            f.write('>{}\n'.format(k))
+            f.write('{}\n'.format("\n".join(v)))
+        f.close()
 
     dot = graphviz.Digraph(comment=" ".join(sys.argv), format='png',
                            graph_attr=[('size','24,14'), ('ratio','fill'), ('fontsize','14')])
