@@ -13,21 +13,35 @@ if __name__ == '__main__':
     parser.add_argument(
         'ids_path', type=str,
         help="Path to prune id file.")
+    parser.add_argument(
+        '--naive', type=str, required=True,
+        help="The name of the naive sequence.")
+    parser.add_argument(
+        '--seed', type=str, required=True,
+        help="The name of the seed sequence.")
 
     args = parser.parse_args()
 
     tree = Tree(args.tree_path, format=1)
+    tree.set_outgroup(tree & args.naive)
 
     with open(args.ids_path) as f:
         ids = f.readlines()
     ids = [id.rstrip("\n") for id in ids]
 
     for leaf_node in tree.get_leaves():
-        node_face = TextFace(leaf_node.name, fsize=10,
-                             fgcolor="red" if leaf_node.name in ids else "black")
-        leaf_node.add_face(node_face, column=0, position="aligned")
+        if leaf_node.name in [args.naive, args.seed]:
+            color = "blue"
+        elif leaf_node.name in ids:
+            color = "red"
+        else:
+            color = "black"
+
+        node_face = TextFace(leaf_node.name, fsize=6, fgcolor=color)
+        leaf_node.add_face(node_face, column=0, position="float")
 
     ts = TreeStyle()
+    ts.mode="c"
     ts.show_leaf_name = False
     ts.show_scale = False
 
