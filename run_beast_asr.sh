@@ -4,6 +4,7 @@ set -e
 
 # Parse the command line arguments.
 NARGS="$#"
+ARGS="$@"
 
 if [ "${NARGS}" -eq 0 ]
   then
@@ -89,6 +90,9 @@ if [ "${FAIL}" -eq 1 ]; then exit 1; fi
 # Make the data and runs directories.
 mkdir -p data runs
 
+# Print the command-line call to a file.
+echo ${ARGS} > args.log
+
 # Grab the sequences from stoat.
 scp stoat:${DATA_PATH} data/${SEED}.csv
 
@@ -99,7 +103,7 @@ lib/pandis/get_naives.py data/${SEED}.csv >> data/${SEED}.family_0.healthy.fasta
 
 # Generate a tree and prune sequences from the clonal family.
 FastTree -nt data/${SEED}.family_0.healthy.fasta > data/${SEED}.family_0.healthy.tre
-lib/cft/bin/prune.py --naive ${NAIVE} --seed ${SEED} data/${SEED}.family_0.healthy.tre -n ${NPRUNE} --strategy seed_lineage > data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids
+lib/cft/bin/prune.py --naive ${NAIVE} --seed ${SEED} data/${SEED}.family_0.healthy.tre -n ${NPRUNE} --strategy seed_lineage data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids
 seqmagick convert --include-from-file data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids data/${SEED}.family_0.healthy.fasta data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta
 
 # Output the FastTree .PNG tree graphic highlighting the pruned nodes.
@@ -117,3 +121,8 @@ fi
 
 # Summarize the BEAST results.
 python/trees_to_counted_ancestors.py --seed ${SEED} --burnin ${MCMC_BURNIN} --filter ${ASR_NFILTER} runs/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.trees data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta
+
+# Move the results to the output directory.
+OUTPUT_DIR=${SEED}_nprune${NPRUNE}_iter${MCMC_ITER}_thin${MCMC_THIN}_burnin${MCMC_BURNIN}_filter${ASR_NFILTER}
+mkdir ${OUTPUT_DIR}
+mv -t ${OUTPUT_DIR} data/ runs/ args.log
