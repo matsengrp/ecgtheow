@@ -15,7 +15,11 @@ Python modules:
 
 # Example usage
 
-The `run_beast_asr.sh` shell script executes the entire ancestral sequence reconstruction pipeline.  An example is given below:
+Clone the ecgtheow repository using the following command:
+
+    git clone --recursive https://github.com/matsengrp/ecgtheow.git
+
+The `run_beast_asr.sh` shell script in the root directory executes the entire ancestral sequence reconstruction pipeline.  An example is given below:
 
     ./run_beast_asr.sh --naive naive0 --seed BF520.1-igh --beast-dir /usr/local/BEASTv1.8.4/ --beagle-dir /usr/local/lib/ --data-path /fh/fast/matsen_e/processed-data/partis/laura-mb/v9/seeds/BF520.1-igh/BF520-h-IgG/run-viterbi-best-plus-0.csv
 
