@@ -65,6 +65,11 @@ do
       shift 2
       NARGS=$((NARGS-2))
       ;;
+    --overwrite)
+      OVERWRITE=1
+      shift 1
+      NARGS=$((NARGS-1))
+      ;;
     *)
       echo "ERROR: Please specify valid command line arguments."
       exit 1
@@ -77,6 +82,7 @@ if [ -z "${MCMC_ITER}" ]; then MCMC_ITER=10000000; fi
 if [ -z "${MCMC_THIN}" ]; then MCMC_THIN=1000; fi
 if [ -z "${MCMC_BURNIN}" ]; then MCMC_BURNIN=1000; fi
 if [ -z "${ASR_NFILTER}" ]; then ASR_NFILTER=100; fi
+if [ -z "${OVERWRITE}" ]; then OVERWRITE=0; fi
 
 FAIL=0
 if [ -z "${NAIVE}" ]; then echo "ERROR: Please specify the '--naive' command line argument."; FAIL=1; fi
@@ -90,7 +96,7 @@ if [ "${FAIL}" -eq 1 ]; then exit 1; fi
 # Make the data and runs directories.
 mkdir -p data runs
 
-# Print the command-line call to a file.
+# Print the command line call to a file.
 echo ${ARGS} > args.log
 
 # Grab the sequences from stoat.
@@ -115,8 +121,8 @@ python/generate_beast_xml_input.py --naive ${NAIVE} --seed ${SEED} templates/bea
 # Run BEAST.
 java -Xms64m -Xmx2048m -Djava.library.path=${BEAGLE_DIR} -Dbeast.plugins.dir=beast/plugins -jar ${BEAST_DIR}/lib/beast.jar -warnings -seed 1 -overwrite runs/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.xml
 if [ -e "${SEED}.family_0.healthy.seedpruned.${NPRUNE}.log" ]
-  then
-    mv ${SEED}.family_0.healthy.seedpruned.${NPRUNE}.* runs/
+then
+  mv ${SEED}.family_0.healthy.seedpruned.${NPRUNE}.* runs/
 fi
 
 # Summarize the BEAST results.
@@ -124,5 +130,12 @@ python/trees_to_counted_ancestors.py --seed ${SEED} --burnin ${MCMC_BURNIN} --fi
 
 # Move the results to the output directory.
 OUTPUT_DIR=${SEED}_nprune${NPRUNE}_iter${MCMC_ITER}_thin${MCMC_THIN}_burnin${MCMC_BURNIN}_filter${ASR_NFILTER}
-mkdir ${OUTPUT_DIR}
-mv -t ${OUTPUT_DIR} data/ runs/ args.log
+if [ "${OVERWRITE}" -eq 1 ]
+then
+  mkdir -p ${OUTPUT_DIR}
+  cp -t ${OUTPUT_DIR} -r data/ runs/ args.log
+  rm -r data/ runs/ args.log
+else
+  mkdir ${OUTPUT_DIR}
+  mv -t ${OUTPUT_DIR} data/ runs/ args.log
+fi
