@@ -35,7 +35,7 @@ The full set of command line arguments is described in the following table:
 | `--mcmc-iter` | The number of total MCMC iterations run in BEAST (defaults to 10000000). |
 | `--mcmc-thin` | The MCMC sampling frequency used in BEAST (defaults to 1000). |
 | `--mcmc-burnin` | The number of MCMC samples thrown away due to burn-in (defaults to 1000). |
-| `--asr-nfilters` | The comma-separated list of thresholds used to filter out infrequent ancestral sequence transitions in the MCMC samples (defaults to 50,100). |
+| `--asr-nfilters` | The comma-separated list of thresholds used to filter out infrequent ancestral sequence transitions in the MCMC samples (defaults to `50,100`). |
 | `--overwrite` | A binary flag that indicates whether to overwrite already existing results. |
 
 Note that on stoat, `--beast-dir` and `--beagle-dir` should be set to `/home/matsengrp/local/BEASTv1.8.4/` and `/home/matsengrp/local/lib/`, respectively.
