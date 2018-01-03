@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import argparse
+import copy
 from collections import Counter
 from itertools import groupby
 import math
@@ -57,7 +58,7 @@ if __name__ == '__main__':
         '--seed', required=True,
         help="The name of the seed sequence.")
     parser.add_argument(
-        '--filter', required=True, type=int,
+        '--filters', nargs='+', required=True, type=int,
         help="Only display edges with at least this many samples.")
 
     args = parser.parse_args()
@@ -144,9 +145,11 @@ if __name__ == '__main__':
 # we want to add extra information to nodes.
 #    for k in out_seqs:
 #        dot.node(k)
+for nfilter in args.filters:
+    dot_copy = copy.deepcopy(dot)
 
     for ((a,b), count) in edge_c.most_common(None):
-        if a != b and count >= args.filter:
+        if a != b and count >= nfilter:
             # Edge confidence measured by percentage of transitions from parent node (i.e. in [0,100]),
             # which is then mapped to the interval [20,100] to avoid transparent edges.
             # Node confidence is treated in a similar fashion below.
@@ -161,5 +164,6 @@ if __name__ == '__main__':
                 child_conf = int(10 + (100-10) * float(node_c[b]) / num_trees)
                 dot.node(seqs_out[b], style="filled", fillcolor="#ff0000" + (str(child_conf) if child_conf < 100 else ""))
 
-    dot.save(base+'.aa_lineage_graph.dot')
-    dot.render(base+'.aa_lineage_graph')
+    export_path = base + '.nfilter' + str(nfilter)
+    dot_copy.save(export_path + '.aa_lineage_graph.dot')
+    dot_copy.render(export_path + '.aa_lineage_graph')

@@ -60,8 +60,8 @@ do
       shift 2
       NARGS=$((NARGS-2))
       ;;
-    --asr-nfilter)
-      ASR_NFILTER="$2"
+    --asr-nfilters)
+      ASR_NFILTERS="$2"
       shift 2
       NARGS=$((NARGS-2))
       ;;
@@ -81,7 +81,7 @@ if [ -z "${NPRUNE}" ]; then NPRUNE=100; fi
 if [ -z "${MCMC_ITER}" ]; then MCMC_ITER=10000000; fi
 if [ -z "${MCMC_THIN}" ]; then MCMC_THIN=1000; fi
 if [ -z "${MCMC_BURNIN}" ]; then MCMC_BURNIN=1000; fi
-if [ -z "${ASR_NFILTER}" ]; then ASR_NFILTER=100; fi
+if [ -z "${ASR_NFILTERS}" ]; then ASR_NFILTERS="50,100"; fi
 if [ -z "${OVERWRITE}" ]; then OVERWRITE=0; fi
 
 FAIL=0
@@ -126,10 +126,10 @@ then
 fi
 
 # Summarize the BEAST results.
-python/trees_to_counted_ancestors.py --seed ${SEED} --burnin ${MCMC_BURNIN} --filter ${ASR_NFILTER} runs/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.trees data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta
+python/trees_to_counted_ancestors.py runs/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.trees data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta --seed ${SEED} --burnin ${MCMC_BURNIN} --filter ${ASR_NFILTERS//,/ }
 
 # Move the results to the output directory.
-OUTPUT_DIR=${SEED}_nprune${NPRUNE}_iter${MCMC_ITER}_thin${MCMC_THIN}_burnin${MCMC_BURNIN}_filter${ASR_NFILTER}
+OUTPUT_DIR=${SEED}_nprune${NPRUNE}_iter${MCMC_ITER}_thin${MCMC_THIN}_burnin${MCMC_BURNIN}
 if [ "${OVERWRITE}" -eq 1 ]
 then
   mkdir -p ${OUTPUT_DIR}

@@ -12,7 +12,6 @@ Python modules:
     pip install jinja2
     pip install seqmagick
 
-
 # Example usage
 
 Clone the ecgtheow repository using the following command:
@@ -31,11 +30,12 @@ The full set of command line arguments is described in the following table:
 | `--seed` | The name of the seed sequence. |
 | `--beast-dir` | The absolute path of the BEAST program. |
 | `--beagle-dir` | The absolute path of the BEAGLE libraries. |
-| `--data-path` | The absolute path of the partis data file. |
+| `--data-path` | The absolute path of the partis data file (on stoat). |
 | `--nprune` | The number of sequences to keep from the `cft` pruning step (defaults to 100). |
 | `--mcmc-iter` | The number of total MCMC iterations run in BEAST (defaults to 10000000). |
 | `--mcmc-thin` | The MCMC sampling frequency used in BEAST (defaults to 1000). |
 | `--mcmc-burnin` | The number of MCMC samples thrown away due to burn-in (defaults to 1000). |
-| `--asr-nfilter` | The threshold used to filter out infrequent ancestral sequence transitions in the MCMC samples (defaults to 100). |
+| `--asr-nfilters` | The comma-separated list of thresholds used to filter out infrequent ancestral sequence transitions in the MCMC samples (defaults to 50,100). |
+| `--overwrite` | A binary flag that indicates whether to overwrite already existing results. |
 
 Note that on stoat, `--beast-dir` and `--beagle-dir` should be set to `/home/matsengrp/local/BEASTv1.8.4/` and `/home/matsengrp/local/lib/`, respectively.
