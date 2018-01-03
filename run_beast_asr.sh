@@ -126,7 +126,7 @@ then
 fi
 
 # Summarize the BEAST results.
-python/trees_to_counted_ancestors.py runs/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.trees data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta --seed ${SEED} --burnin ${MCMC_BURNIN} --filter ${ASR_NFILTERS//,/ }
+python/trees_to_counted_ancestors.py runs/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.trees data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta --seed ${SEED} --burnin ${MCMC_BURNIN} --filters ${ASR_NFILTERS//,/ }
 
 # Move the results to the output directory.
 OUTPUT_DIR=${SEED}_nprune${NPRUNE}_iter${MCMC_ITER}_thin${MCMC_THIN}_burnin${MCMC_BURNIN}
