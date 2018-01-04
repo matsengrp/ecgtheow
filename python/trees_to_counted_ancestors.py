@@ -154,15 +154,15 @@ for nfilter in args.filters:
             # which is then mapped to the interval [20,100] to avoid transparent edges.
             # Node confidence is treated in a similar fashion below.
             edge_conf = int(20 + (100-20) * float(count) / node_c[a])
-            dot.edge(seqs_out[a], seqs_out[b], xlabel=" ".join(format_label(find_muts(a, b))),
+            dot_copy.edge(seqs_out[a], seqs_out[b], xlabel=" ".join(format_label(find_muts(a, b))),
                      color="#0000ff" + (str(edge_conf) if edge_conf < 100 else ""), fontsize='11')
 
             if seqs_out[a] != "naive0":
                 child_conf = int(10 + (100-10) * float(node_c[a]) / num_trees)
-                dot.node(seqs_out[a], style="filled", fillcolor="#ff0000" + (str(child_conf) if child_conf < 100 else ""))
+                dot_copy.node(seqs_out[a], style="filled", fillcolor="#ff0000" + (str(child_conf) if child_conf < 100 else ""))
             if seqs_out[b] != args.seed:
                 child_conf = int(10 + (100-10) * float(node_c[b]) / num_trees)
-                dot.node(seqs_out[b], style="filled", fillcolor="#ff0000" + (str(child_conf) if child_conf < 100 else ""))
+                dot_copy.node(seqs_out[b], style="filled", fillcolor="#ff0000" + (str(child_conf) if child_conf < 100 else ""))
 
     export_path = base + '.nfilter' + str(nfilter)
     dot_copy.save(export_path + '.aa_lineage_graph.dot')
