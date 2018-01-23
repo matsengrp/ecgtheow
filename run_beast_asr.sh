@@ -95,7 +95,7 @@ if [ "${FAIL}" -eq 1 ]; then exit 1; fi
 
 # Check if the output directory already exists.
 OUTPUT_DIR=${SEED}_nprune${NPRUNE}_iter${MCMC_ITER}_thin${MCMC_THIN}_burnin${MCMC_BURNIN}
-if [ ("${OVERWRITE}" -eq 0) -a (-d "${OUTPUT_DIR}") ]
+if [ "${OVERWRITE}" -eq 0 -a -d "${OUTPUT_DIR}" ]
 then
   echo "ERROR: The output directory already exists! To overwrite the directory, please specify the '--overwrite' command line argument."
   exit 1
