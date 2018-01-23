@@ -68,9 +68,9 @@ if __name__ == '__main__':
     # Make a reversed dictionary for two special sequences.
     special_seqs = {}
     try:
-        if leaf_seqs['naive0'] == leaf_seqs[args.seed]:
+        if leaf_seqs['naive'] == leaf_seqs[args.seed]:
             raise Exception("The naive sequence is the same as the seed sequence!")
-        for special_name in ['naive0', args.seed]:
+        for special_name in ['naive', args.seed]:
             special_seqs[translate(leaf_seqs[special_name])] = special_name
     except KeyError, e:
         raise Exception("Couldn't find {} in FASTA file {}.".format(e, args.fasta_path))
@@ -89,7 +89,7 @@ if __name__ == '__main__':
             # Skip burnin.
             continue
         l = seqs_of_tree(t, args.seed)
-        l.append(leaf_seqs['naive0'])
+        l.append(leaf_seqs['naive'])
 
         # Update the (AA:(DNA Counter)) node dict.
         for k, g in groupby(l, lambda seq: translate(seq)):
@@ -123,8 +123,8 @@ if __name__ == '__main__':
                 str(cnt) + "," + dna_seq for (dna_seq, cnt) in node_dt[s].most_common(None)
             ]
 
-    if 'naive0' not in out_seqs:
-        out_seqs['naive0'] = translate(leaf_seqs['naive0'])
+    if 'naive' not in out_seqs:
+        out_seqs['naive'] = translate(leaf_seqs['naive'])
 
     # Flip the dictionary.
     seqs_out = {v:k for k,v in out_seqs.iteritems()}
@@ -157,7 +157,7 @@ for nfilter in args.filters:
             dot_copy.edge(seqs_out[a], seqs_out[b], xlabel=" ".join(format_label(find_muts(a, b))),
                      color="#0000ff" + (str(edge_conf) if edge_conf < 100 else ""), fontsize='11')
 
-            if seqs_out[a] != "naive0":
+            if seqs_out[a] != "naive":
                 child_conf = int(10 + (100-10) * float(node_c[a]) / num_trees)
                 dot_copy.node(seqs_out[a], style="filled", fillcolor="#ff0000" + (str(child_conf) if child_conf < 100 else ""))
             if seqs_out[b] != args.seed:
