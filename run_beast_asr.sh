@@ -15,12 +15,17 @@ fi
 while [ "${NARGS}" -gt 0 ]
 do
   case "$1" in
-    -n|--naive)
-      NAIVE="$2"
+    --data-dir)
+      DATA_DIR="${2%/}"
       shift 2
       NARGS=$((NARGS-2))
       ;;
-    -s|--seed)
+    --sample)
+      SAMPLE="$2"
+      shift 2
+      NARGS=$((NARGS-2))
+      ;;
+    --seed)
       SEED="$2"
       shift 2
       NARGS=$((NARGS-2))
@@ -32,11 +37,6 @@ do
       ;;
     --beagle-dir)
       BEAGLE_DIR="${2%/}"
-      shift 2
-      NARGS=$((NARGS-2))
-      ;;
-    --data-path)
-      DATA_PATH="$2"
       shift 2
       NARGS=$((NARGS-2))
       ;;
@@ -85,13 +85,21 @@ if [ -z "${ASR_NFILTERS}" ]; then ASR_NFILTERS="50,100"; fi
 if [ -z "${OVERWRITE}" ]; then OVERWRITE=0; fi
 
 FAIL=0
-if [ -z "${NAIVE}" ]; then echo "ERROR: Please specify the '--naive' command line argument."; FAIL=1; fi
+if [ -z "${DATA_DIR}" ]; then echo "ERROR: Please specify the '--data-dir' command line argument."; FAIL=1; fi
+if [ -z "${SAMPLE}" ]; then echo "ERROR: Please specify the '--sample' command line argument."; FAIL=1; fi
 if [ -z "${SEED}" ]; then echo "ERROR: Please specify the '--seed' command line argument."; FAIL=1; fi
 if [ -z "${BEAST_DIR}" ]; then echo "ERROR: Please specify the '--beast-dir' command line argument."; FAIL=1; fi
 if [ -z "${BEAGLE_DIR}" ]; then echo "ERROR: Please specify the '--beagle-dir' command line argument."; FAIL=1; fi
-if [ -z "${DATA_PATH}" ]; then echo "ERROR: Please specify the '--data-path' command line argument."; FAIL=1; fi
 if [ "${FAIL}" -eq 1 ]; then exit 1; fi
 
+
+# Check if the output directory already exists.
+OUTPUT_DIR=${SEED}_nprune${NPRUNE}_iter${MCMC_ITER}_thin${MCMC_THIN}_burnin${MCMC_BURNIN}
+if [ ("${OVERWRITE}" -eq 0) -a (-d "${OUTPUT_DIR}") ]
+then
+  echo "ERROR: The output directory already exists! To overwrite the directory, please specify the '--overwrite' command line argument."
+  exit 1
+fi
 
 # Make the data and runs directories.
 mkdir -p data runs
@@ -99,24 +107,20 @@ mkdir -p data runs
 # Print the command line call to a file.
 echo ${ARGS} > args.log
 
-# Grab the sequences from stoat.
-scp stoat:${DATA_PATH} data/${SEED}.csv
-
-# Create the unpruned FASTA file (containing both the naive and seed sequences).
-lib/pandis/transpose_family.py data/${SEED}.csv
-lib/pandis/healthy_to_fasta.py data/${SEED}.family_0.csv
-lib/pandis/get_naives.py data/${SEED}.csv >> data/${SEED}.family_0.healthy.fasta
+# Parse the partis YAML info file and get the "healthy" sequences.
+export PARTIS=${PWD%/}/lib/cft/partis
+python/parse_partis_data.py ${DATA_DIR} --sample ${SAMPLE} --seed ${SEED}
 
 # Generate a tree and prune sequences from the clonal family.
 FastTree -nt data/${SEED}.family_0.healthy.fasta > data/${SEED}.family_0.healthy.tre
-lib/cft/bin/prune.py --naive ${NAIVE} --seed ${SEED} data/${SEED}.family_0.healthy.tre -n ${NPRUNE} --strategy seed_lineage data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids
+lib/cft/bin/prune.py --naive naive --seed ${SEED} data/${SEED}.family_0.healthy.tre -n ${NPRUNE} --strategy seed_lineage data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids
 seqmagick convert --include-from-file data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids data/${SEED}.family_0.healthy.fasta data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta
 
 # Output the FastTree .PNG tree graphic highlighting the pruned nodes.
-python/annotate_fasttree_tree.py data/${SEED}.family_0.healthy.tre data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids --naive ${NAIVE} --seed ${SEED}
+python/annotate_fasttree_tree.py data/${SEED}.family_0.healthy.tre data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids --naive naive --seed ${SEED}
 
 # Construct the BEAST XML input file.
-python/generate_beast_xml_input.py --naive ${NAIVE} --seed ${SEED} templates/beast_template.xml data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta --iter ${MCMC_ITER} --thin ${MCMC_THIN}
+python/generate_beast_xml_input.py --naive naive --seed ${SEED} templates/beast_template.xml data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta --iter ${MCMC_ITER} --thin ${MCMC_THIN}
 
 # Run BEAST.
 java -Xms64m -Xmx2048m -Djava.library.path=${BEAGLE_DIR} -Dbeast.plugins.dir=beast/plugins -jar ${BEAST_DIR}/lib/beast.jar -warnings -seed 1 -overwrite runs/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.xml
@@ -129,7 +133,6 @@ fi
 python/trees_to_counted_ancestors.py runs/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.trees data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta --seed ${SEED} --burnin ${MCMC_BURNIN} --filters ${ASR_NFILTERS//,/ }
 
 # Move the results to the output directory.
-OUTPUT_DIR=${SEED}_nprune${NPRUNE}_iter${MCMC_ITER}_thin${MCMC_THIN}_burnin${MCMC_BURNIN}
 if [ "${OVERWRITE}" -eq 1 ]
 then
   mkdir -p ${OUTPUT_DIR}
