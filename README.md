@@ -14,13 +14,13 @@ Clone the repository using the following command:
 
     git clone --recursive https://github.com/matsengrp/ecgtheow.git
 
-Then, create the ecgtheow conda environment by running `./make_conda_env.sh`.
+Then, create the ecgtheow conda environment by running `ecgtheow/make_conda_env.sh`.
 
 # Example usage
 
 The `run_ecgtheow.sh` shell script in the root directory executes the entire ancestral sequence reconstruction pipeline.  An example is given below:
 
-    source activate ecgtheow
+    source activate ecgtheow && cd ecgtheow
     ./run_ecgtheow.sh --data-dir /fh/fast/matsen_e/processed-data/partis/qa255-synth/v17 --sample QA255-g-merged --seed QA255.105-Vh --beast-dir /home/matsengrp/local/BEASTv1.8.4/ --beagle-dir /home/matsengrp/local/lib/
 
 Remember that the conda environment must be activated before running the `run_ecgtheow.sh` script.
