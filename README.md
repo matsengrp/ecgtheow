@@ -8,6 +8,8 @@ BEAST (http://beast.community/)
 
 FastTree (http://www.microbesonline.org/fasttree/)
 
+An X server or xvfb-run, necessary for ete3
+
 # Installation
 
 Clone the repository using the following command:
@@ -39,3 +41,13 @@ The full set of command line arguments is described in the following table:
 | `--mcmc-burnin` | The number of MCMC samples thrown away due to burn-in (defaults to 1000). |
 | `--asr-nfilters` | The comma-separated list of thresholds used to filter out infrequent ancestral sequence transitions in the MCMC samples (defaults to 50,100). |
 | `--overwrite` | A binary flag that indicates whether to overwrite already existing results. |
+
+## X Servers & ETE3
+
+Note that ETE3 (as mentioned above) requires an active X-server connection.
+If the environment you're running from does not have one, you can simulate one by running with `xvfb-run`.
+Doing this for the example above would look like:
+
+    xvfb-run ./run_ecgtheow.sh --data-dir /fh/fast/matsen_e/processed-data/partis/qa255-synth/v17 --sample QA255-g-merged --seed QA255.105-Vh --beast-dir /home/matsengrp/local/BEASTv1.8.4/ --beagle-dir /home/matsengrp/local/lib/
+
+
