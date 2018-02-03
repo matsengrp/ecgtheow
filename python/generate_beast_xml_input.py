@@ -28,11 +28,14 @@ if __name__ == '__main__':
     parser.add_argument(
         '--thin', type=int, default=1000,
         help="The MCMC sampling frequency.")
+    parser.add_argument(
+        '--xml-path',
+        help="The xml output file path.")
 
     args = parser.parse_args()
 
     args.fasta_path = args.fasta_path.lstrip("./")
-    _, filename = re.split("/", args.fasta_path)
+    filename = re.split("/", args.fasta_path)[-1]
 
     id_seq = parse_fasta_seqs(args.fasta_path)
 
@@ -51,5 +54,5 @@ if __name__ == '__main__':
                              undefined=jinja2.StrictUndefined,
                              trim_blocks=True, lstrip_blocks=True)
 
-    xml_path = "runs/" + temp_vars["basename"] + ".xml"
+    xml_path = args.xml_path or ("runs/" + temp_vars["basename"] + ".xml")
     env.get_template(args.template_path).stream(**temp_vars).dump(xml_path)
