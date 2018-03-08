@@ -155,6 +155,15 @@ def simulation_setting(c):
 
 # This simulation nest level defines 
 
+@w.add_target()
+def _simulation_posterior_seqs(outdir, c):
+    return dict()
+@w.add_target()
+def _simulation_posterior_trees(outdir, c):
+    return dict()
+# Need to add this to our tripl nestly wrapper
+#w.add_aggregate('simulation_posterior_seqs', dict)
+
 @w.add_nest()
 def simulation(c):
     return [{'id': i} for i in range(c['simulation_setting']['n_simulations'])]
@@ -229,5 +238,12 @@ def posterior(outdir, c):
         " -warnings -seed 1 -overwrite" \
         " " + path.basename(str(c['beastfile'][0])) + " > beastrun.log")
 
+@w.add_target()
+def ecgtheow_counted_ancestors(outdir, c):
+    return env.Command(
+        path.join(outdir, 'ecgtheow_counted_ancestors.dnamap'),
+        [c['seed'], c['posterior'], c['sampled_seqs']],
+        './python/trees_to_counted_ancestors.py ${SOURCES[1]} ${SOURCES[2]} ' \
+            + '--seed `cat $SOURCE` --naive simcell_1 --burnin 1000 --filters 50')
 
 

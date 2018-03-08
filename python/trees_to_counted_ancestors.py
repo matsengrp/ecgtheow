@@ -4,7 +4,7 @@ import argparse
 import copy
 from collections import Counter
 from itertools import groupby
-import math
+#import math
 import numpy as np
 from collections import OrderedDict
 import os
@@ -35,10 +35,10 @@ def seqs_of_tree(t, seed):
     lineage = [t.find_node_with_taxon_label(seed)]
 
     while(True):
-        n = lineage[-1].parent_node
-        if n is None:
+        node = lineage[-1].parent_node
+        if node is None:
             break  # We are done.
-        lineage.append(n)
+        lineage.append(node)
 
     return [n.annotations.get_value('ancestral') for n in lineage]
 
@@ -55,6 +55,9 @@ if __name__ == '__main__':
         '--burnin', type=int, required=True,
         help="How many entries to remove as burnin.")
     parser.add_argument(
+        '--naive', default='naive',
+        help="The name of the naive sequence.")
+    parser.add_argument(
         '--seed', required=True,
         help="The name of the seed sequence.")
     parser.add_argument(
@@ -68,9 +71,9 @@ if __name__ == '__main__':
     # Make a reversed dictionary for two special sequences.
     special_seqs = {}
     try:
-        if leaf_seqs['naive'] == leaf_seqs[args.seed]:
+        if leaf_seqs[args.naive] == leaf_seqs[args.seed]:
             raise Exception("The naive sequence is the same as the seed sequence!")
-        for special_name in ['naive', args.seed]:
+        for special_name in [args.naive, args.seed]:
             special_seqs[translate(leaf_seqs[special_name])] = special_name
     except KeyError, e:
         raise Exception("Couldn't find {} in FASTA file {}.".format(e, args.fasta_path))
@@ -79,6 +82,7 @@ if __name__ == '__main__':
     tree_yielder = dendropy.Tree.yield_from_files(
         files=source_files,
         schema='nexus',
+        preserve_underscores=True
     )
 
     node_c = Counter()
@@ -89,7 +93,7 @@ if __name__ == '__main__':
             # Skip burnin.
             continue
         l = seqs_of_tree(t, args.seed)
-        l.append(leaf_seqs['naive'])
+        l.append(leaf_seqs[args.naive])
 
         # Update the (AA:(DNA Counter)) node dict.
         for k, g in groupby(l, lambda seq: translate(seq)):
@@ -123,8 +127,8 @@ if __name__ == '__main__':
                 str(cnt) + "," + dna_seq for (dna_seq, cnt) in node_dt[s].most_common(None)
             ]
 
-    if 'naive' not in out_seqs:
-        out_seqs['naive'] = translate(leaf_seqs['naive'])
+    if args.naive not in out_seqs:
+        out_seqs[args.naive] = translate(leaf_seqs[args.naive])
 
     # Flip the dictionary.
     seqs_out = {v:k for k,v in out_seqs.iteritems()}
@@ -157,7 +161,7 @@ for nfilter in args.filters:
             dot_copy.edge(seqs_out[a], seqs_out[b], xlabel=" ".join(format_label(find_muts(a, b))),
                      color="#0000ff" + (str(edge_conf) if edge_conf < 100 else ""), fontsize='11')
 
-            if seqs_out[a] != "naive":
+            if seqs_out[a] != args.naive:
                 child_conf = int(10 + (100-10) * float(node_c[a]) / num_trees)
                 dot_copy.node(seqs_out[a], style="filled", fillcolor="#ff0000" + (str(child_conf) if child_conf < 100 else ""))
             if seqs_out[b] != args.seed:
