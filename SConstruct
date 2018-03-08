@@ -246,4 +246,57 @@ def ecgtheow_counted_ancestors(outdir, c):
         './python/trees_to_counted_ancestors.py ${SOURCES[1]} ${SOURCES[2]} ' \
             + '--seed `cat $SOURCE` --naive simcell_1 --burnin 1000 --filters 50')
 
+@w.add_target()
+def _process_posterior(outdir, c):
+    tgt = env.Command(
+        [path.join(outdir, 'lineage_posterior.' + x) for x in ['trees.csv', 'seqs.csv']],
+        [c['seed'], c['tree'], c['posterior'], c['sampled_seqs']],
+        './python/process_beast.py ${SOURCES[1]} ${SOURCES[2]} ' \
+            + '--seed `cat $SOURCE` --naive simcell_1 --burnin 1000 $TARGETS')
+    env.Depends(tgt, './python/process_beast.py')
+    return tgt
+
+@w.add_target()
+def posterior_seqs(outdir, c):
+    tgt = c['_process_posterior'][1]
+    c['_simulation_posterior_seqs'][c['simulation']['id']] = tgt
+    return tgt
+
+@w.add_target()
+def posterior_trees(outdir, c):
+    tgt = c['_process_posterior'][0]
+    c['_simulation_posterior_trees'][c['simulation']['id']] = tgt
+    return tgt
+
+
+w.pop()
+
+
+@w.add_target()
+def combined_posterior_seqs(outdir, c):
+    seq_files = c['_simulation_posterior_seqs']
+    return env.Command(
+        path.join(outdir, 'combined_posterior_seqs.csv'),
+        seq_files.values(),
+        'csvstack -n simulation -g {} $SOURCES > $TARGET'.format(','.join(str(x) for x in seq_files.keys())))
+
+@w.add_target()
+def combined_posterior_trees(outdir, c):
+    tree_files = c['_simulation_posterior_trees']
+    return env.Command(
+        path.join(outdir, 'combined_posterior_trees.csv'),
+        tree_files.values(),
+        'csvstack -n simulation -g {} $SOURCES > $TARGET'.format(','.join(str(x) for x in tree_files.keys())))
+
+#@w.add_target()
+#def compare(outdir, c):
+    #return env.Command(
+        #path.join(outdir, ''),
+        #'./python/process_beast.py ')
+
+
+# trigger final metadata build
+w.pop()
+
+
 
