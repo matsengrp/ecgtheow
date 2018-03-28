@@ -67,9 +67,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     leaf_seqs = parse_fasta_seqs(args.fasta_path)
-    # Partis sequences may have N-padding, but BEAST removes all N-padding.
-    for k,v in leaf_seqs.iteritems():
-        leaf_seqs[k] = v.strip("N")
 
     # Make a reversed dictionary for two special sequences.
     special_seqs = {}
@@ -96,6 +93,7 @@ if __name__ == '__main__':
             # Skip burnin.
             continue
         l = seqs_of_tree(t, args.seed)
+        l[0] = leaf_seqs[args.seed]
         l.append(leaf_seqs[args.naive])
 
         # Update the (AA:(DNA Counter)) node dict.

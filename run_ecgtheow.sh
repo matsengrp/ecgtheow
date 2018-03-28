@@ -119,6 +119,12 @@ seqmagick convert --include-from-file data/${SEED}.family_0.healthy.seedpruned.$
 # Output the FastTree .PNG tree graphic highlighting the pruned nodes.
 python/annotate_fasttree_tree.py data/${SEED}.family_0.healthy.tre data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids --naive naive --seed ${SEED}
 
+# Trim off site columns with full N-padding.
+awk '/^[^>]/ {gsub("N", "-", $0)} {print}' < data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta > data/temp.fasta
+seqmagick mogrify --squeeze data/temp.fasta
+awk '/^[^>]/ {gsub("-", "N", $0)} {print}' < data/temp.fasta > data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta
+rm data/temp.fasta
+
 # Construct the BEAST XML input file.
 python/generate_beast_xml_input.py --naive naive --seed ${SEED} templates/beast_template.xml data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta --iter ${MCMC_ITER} --thin ${MCMC_THIN}
 
