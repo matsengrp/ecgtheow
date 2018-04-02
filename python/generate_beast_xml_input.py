@@ -43,7 +43,7 @@ if __name__ == '__main__':
     else:
         fasta_path = re.split("/", args.fasta_path)[-1]
         xml_base = os.path.splitext(fasta_path)[0]
-        xml_base = args.output_dir + "/runs/" + xml_base
+        xml_base = args.output_dir + "/runs/" + xml_base + "_beast"
 
     id_seq = parse_fasta_seqs(args.fasta_path)
 
@@ -62,5 +62,5 @@ if __name__ == '__main__':
                              undefined=jinja2.StrictUndefined,
                              trim_blocks=True, lstrip_blocks=True)
 
-    env.get_template(args.template_path).stream(**temp_vars).dump(xml_base + "_beast.xml")
+    env.get_template(args.template_path).stream(**temp_vars).dump(xml_base + ".xml")
 
