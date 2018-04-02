@@ -114,22 +114,22 @@ python/parse_partis_data.py ${DATA_DIR} --sample ${SAMPLE} --seed ${SEED} --outp
 # Generate a tree and prune sequences from the clonal family.
 FastTree -nt ${OUTPUT_DIR}/data/healthy_seqs.fasta > ${OUTPUT_DIR}/data/healthy_seqs.tre
 lib/cft/bin/prune.py --naive naive --seed ${SEED} ${OUTPUT_DIR}/data/healthy_seqs.tre -n ${NPRUNE} --strategy seed_lineage ${OUTPUT_DIR}/data/healthy_seqs.nprune${NPRUNE}.ids
-seqmagick convert --include-from-file ${OUTPUT_DIR}/data/healthy_seqs.nprune${NPRUNE}.ids ${OUTPUT_DIR}/data/healthy_seqs.fasta ${OUTPUT_DIR}/data/healthy_seqs.nprune${NPRUNE}.fasta
+seqmagick convert --include-from-file ${OUTPUT_DIR}/data/healthy_seqs.nprune${NPRUNE}.ids ${OUTPUT_DIR}/data/healthy_seqs.fasta ${OUTPUT_DIR}/data/${OUTPUT_DIR}.fasta
 
 # Output the FastTree .PNG tree graphic highlighting the pruned nodes.
 python/annotate_fasttree_tree.py ${OUTPUT_DIR}/data/healthy_seqs.tre ${OUTPUT_DIR}/data/healthy_seqs.nprune${NPRUNE}.ids --naive naive --seed ${SEED}
 
 # Trim off site columns with full N-padding.
-awk '/^[^>]/ {gsub("N", "-", $0)} {print}' < ${OUTPUT_DIR}/data/healthy_seqs.nprune${NPRUNE}.fasta > ${OUTPUT_DIR}/data/temp.fasta
+awk '/^[^>]/ {gsub("N", "-", $0)} {print}' < ${OUTPUT_DIR}/data/${OUTPUT_DIR}.fasta > ${OUTPUT_DIR}/data/temp.fasta
 seqmagick mogrify --squeeze ${OUTPUT_DIR}/data/temp.fasta
-awk '/^[^>]/ {gsub("-", "N", $0)} {print}' < ${OUTPUT_DIR}/data/temp.fasta > ${OUTPUT_DIR}/data/healthy_seqs.nprune${NPRUNE}.fasta
+awk '/^[^>]/ {gsub("-", "N", $0)} {print}' < ${OUTPUT_DIR}/data/temp.fasta > ${OUTPUT_DIR}/data/${OUTPUT_DIR}.fasta
 rm ${OUTPUT_DIR}/data/temp.fasta
 
 # Construct the BEAST XML input file.
-python/generate_beast_xml_input.py --naive naive --seed ${SEED} templates/beast_template.xml ${OUTPUT_DIR}/data/healthy_seqs.nprune${NPRUNE}.fasta --iter ${MCMC_ITER} --thin ${MCMC_THIN} --output-dir ${OUTPUT_DIR}
+python/generate_beast_xml_input.py --naive naive --seed ${SEED} templates/beast_template.xml ${OUTPUT_DIR}/data/${OUTPUT_DIR}.fasta --iter ${MCMC_ITER} --thin ${MCMC_THIN} --output-dir ${OUTPUT_DIR}
 
 # Run BEAST.
-java -Xms64m -Xmx2048m -Djava.library.path=${BEAGLE_DIR} -Dbeast.plugins.dir=beast/plugins -jar ${BEAST_DIR}/lib/beast.jar -warnings -seed 1 -overwrite ${OUTPUT_DIR}/runs/healthy_seqs.nprune${NPRUNE}.xml
+java -Xms64m -Xmx2048m -Djava.library.path=${BEAGLE_DIR} -Dbeast.plugins.dir=beast/plugins -jar ${BEAST_DIR}/lib/beast.jar -warnings -seed 1 -overwrite ${OUTPUT_DIR}/data/${OUTPUT_DIR}_beast.xml
 # if [ -e "healthy_seqs.nprune${NPRUNE}.log" ]
 # then
   mv healthy_seqs.nprune${NPRUNE}* ${OUTPUT_DIR}/runs/

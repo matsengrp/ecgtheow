@@ -57,5 +57,5 @@ if __name__ == '__main__':
                              undefined=jinja2.StrictUndefined,
                              trim_blocks=True, lstrip_blocks=True)
 
-    xml_path = args.xml_path or (args.output_dir + "/runs/" + temp_vars["basename"] + ".xml")
+    xml_path = args.xml_path or (args.output_dir + "/runs/" + temp_vars["basename"] + "_beast.xml")
     env.get_template(args.template_path).stream(**temp_vars).dump(xml_path)
