@@ -102,22 +102,22 @@ then
 fi
 
 # Make the data and runs directories.
-mkdir -p data runs
+mkdir -p ${OUTPUT_DIR}/data ${OUTPUT_DIR}/runs
 
 # Print the command line call to a file.
-echo ${ARGS} > args.log
+echo ${ARGS} > ${OUTPUT_DIR}/args.log
 
 # Parse the partis YAML info file and get the "healthy" sequences.
 export PARTIS=${PWD%/}/lib/cft/partis
-python/parse_partis_data.py ${DATA_DIR} --sample ${SAMPLE} --seed ${SEED}
+python/parse_partis_data.py ${DATA_DIR} --sample ${SAMPLE} --seed ${SEED} --output-dir ${OUTPUT_DIR}
 
 # Generate a tree and prune sequences from the clonal family.
-FastTree -nt data/${SEED}.family_0.healthy.fasta > data/${SEED}.family_0.healthy.tre
-lib/cft/bin/prune.py --naive naive --seed ${SEED} data/${SEED}.family_0.healthy.tre -n ${NPRUNE} --strategy seed_lineage data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids
-seqmagick convert --include-from-file data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids data/${SEED}.family_0.healthy.fasta data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta
+FastTree -nt ${OUTPUT_DIR}/data/healthy_seqs.fasta > ${OUTPUT_DIR}/data/healthy_seqs.tre
+lib/cft/bin/prune.py --naive naive --seed ${SEED} ${OUTPUT_DIR}/data/healthy_seqs.tre -n ${NPRUNE} --strategy seed_lineage ${OUTPUT_DIR}/data/healthy_seqs.nprune${NPRUNE}.ids
+seqmagick convert --include-from-file ${OUTPUT_DIR}/data/healthy_seqs.nprune${NPRUNE}.ids ${OUTPUT_DIR}/data/healthy_seqs.fasta ${OUTPUT_DIR}/data/healthy_seqs.nprune${NPRUNE}.fasta
 
 # Output the FastTree .PNG tree graphic highlighting the pruned nodes.
-python/annotate_fasttree_tree.py data/${SEED}.family_0.healthy.tre data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids --naive naive --seed ${SEED}
+python/annotate_fasttree_tree.py ${OUTPUT_DIR}/data/healthy_seqs.tre ${OUTPUT_DIR}/data/healthy_seqs.nprune${NPRUNE}.ids --naive naive --seed ${SEED}
 
 # Trim off site columns with full N-padding.
 awk '/^[^>]/ {gsub("N", "-", $0)} {print}' < data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta > data/temp.fasta
