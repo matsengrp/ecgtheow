@@ -15,7 +15,7 @@ if __name__ == '__main__':
         help="Path to RevBayes ASR file.")
     parser.add_argument(
         '--output-path', type=str, required=True,
-        help="Path to output RevBayes trees.")
+        help="Path to output BEAST trees.")
 
     args = parser.parse_args()
 

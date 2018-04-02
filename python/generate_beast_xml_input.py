@@ -23,10 +23,10 @@ if __name__ == '__main__':
         '--seed', type=str, required=True,
         help="The name of the seed sequence.")
     parser.add_argument(
-        '--iter', type=int, default=10000000,
+        '--iter', type=int, required=True,
         help="The number of total MCMC iterations.")
     parser.add_argument(
-        '--thin', type=int, default=1000,
+        '--thin', type=int, required=True,
         help="The MCMC sampling frequency.")
     parser.add_argument(
         '--xml-path',
