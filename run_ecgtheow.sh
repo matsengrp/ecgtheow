@@ -151,11 +151,11 @@ fi
 
 if [ "${RUN_REVBAYES}" -eq 1 ]
 then
-  python/generate_rb_rev_input.py --naive naive --seed ${SEED} templates/rb_template.rev ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --iter $((MCMC_ITER/10.0)) --thin $((MCMC_THIN/10.0)) --output-dir ${OUTPUT_DIR}
+  python/generate_rb_rev_input.py --naive naive --seed ${SEED} templates/rb_template.rev ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --iter $((MCMC_ITER/10)) --thin $((MCMC_THIN/10)) --output-dir ${OUTPUT_DIR}
   revbayes/projects/cmake/rb ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}_rb.rev
   for NFILTER in ${ASR_NFILTERS}
   do
-    RB_NFILTERS="${RB_NFILTERS} $((NFILTER/10.0))"
+    RB_NFILTERS="${RB_NFILTERS} $((NFILTER/10))"
   done
-  python/trees_to_counted_ancestors.py ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rev.trees ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --seed ${SEED} --burnin $((MCMC_BURNIN/10.0)) --filters ${RB_NFILTERS}
+  python/trees_to_counted_ancestors.py ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rev.trees ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --seed ${SEED} --burnin $((MCMC_BURNIN/10)) --filters ${RB_NFILTERS}
 fi
