@@ -5,6 +5,7 @@ set -e
 # Parse the command line arguments.
 NARGS="$#"
 ARGS="$@"
+IFS=","
 
 if [ "${NARGS}" -eq 0 ]
   then
@@ -70,6 +71,16 @@ do
       shift 1
       NARGS=$((NARGS-1))
       ;;
+    --run-beast)
+      RUN_BEAST=1
+      shift 1
+      NARGS=$((NARGS-1))
+      ;;
+    --run-revbayes)
+      RUN_REVBAYES=1
+      shift 1
+      NARGS=$((NARGS-1))
+      ;;
     *)
       echo "ERROR: Please specify valid command line arguments."
       exit 1
@@ -83,6 +94,8 @@ if [ -z "${MCMC_THIN}" ]; then MCMC_THIN=1000; fi
 if [ -z "${MCMC_BURNIN}" ]; then MCMC_BURNIN=1000; fi
 if [ -z "${ASR_NFILTERS}" ]; then ASR_NFILTERS="50,100"; fi
 if [ -z "${OVERWRITE}" ]; then OVERWRITE=0; fi
+if [ -z "${RUN_BEAST}" ]; then RUN_BEAST=1; fi
+if [ -z "${RUN_REVBAYES}" ]; then RUN_REVBAYES=1; fi
 
 FAIL=0
 if [ -z "${DATA_DIR}" ]; then echo "ERROR: Please specify the '--data-dir' command line argument."; FAIL=1; fi
@@ -104,7 +117,7 @@ fi
 # Make the data and runs directories.
 mkdir -p ${OUTPUT_DIR}/data ${OUTPUT_DIR}/runs
 
-# Print the command line call to a file.
+# Print the command line arguments to a file.
 echo ${ARGS} > ${OUTPUT_DIR}/args.log
 
 # Parse the partis YAML info file and get the "healthy" sequences.
@@ -125,11 +138,24 @@ seqmagick mogrify --squeeze ${OUTPUT_DIR}/data/temp.fasta
 awk '/^[^>]/ {gsub("-", "N", $0)} {print}' < ${OUTPUT_DIR}/data/temp.fasta > ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta
 rm ${OUTPUT_DIR}/data/temp.fasta
 
-# Construct the BEAST XML input file.
-python/generate_beast_xml_input.py --naive naive --seed ${SEED} templates/beast_template.xml ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --iter ${MCMC_ITER} --thin ${MCMC_THIN} --output-dir ${OUTPUT_DIR}
+# For both BEAST and RevBayes:
+# 1) Construct the input file;
+# 2) Run the program;
+# 3) Summarize the results.
+if [ "${RUN_BEAST}" -eq 1 ]
+then
+  python/generate_beast_xml_input.py --naive naive --seed ${SEED} templates/beast_template.xml ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --iter ${MCMC_ITER} --thin ${MCMC_THIN} --output-dir ${OUTPUT_DIR}
+  java -Xms64m -Xmx2048m -Djava.library.path=${BEAGLE_DIR} -Dbeast.plugins.dir=beast/plugins -jar ${BEAST_DIR}/lib/beast.jar -warnings -seed 1 -overwrite ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_beast.xml
+  python/trees_to_counted_ancestors.py ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_beast.trees ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --seed ${SEED} --burnin ${MCMC_BURNIN} --filters ${ASR_NFILTERS//,/ }
+fi
 
-# Run BEAST.
-java -Xms64m -Xmx2048m -Djava.library.path=${BEAGLE_DIR} -Dbeast.plugins.dir=beast/plugins -jar ${BEAST_DIR}/lib/beast.jar -warnings -seed 1 -overwrite ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_beast.xml
-
-# Summarize the BEAST results.
-python/trees_to_counted_ancestors.py ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_beast.trees ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --seed ${SEED} --burnin ${MCMC_BURNIN} --filters ${ASR_NFILTERS//,/ }
+if [ "${RUN_REVBAYES}" -eq 1 ]
+then
+  python/generate_rb_rev_input.py --naive naive --seed ${SEED} templates/rb_template.rev ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --iter $((MCMC_ITER/10.0)) --thin $((MCMC_THIN/10.0)) --output-dir ${OUTPUT_DIR}
+  revbayes/projects/cmake/rb ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}_rb.rev
+  for NFILTER in ${ASR_NFILTERS}
+  do
+    RB_NFILTERS="${RB_NFILTERS} $((NFILTER/10.0))"
+  done
+  python/trees_to_counted_ancestors.py ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rev.trees ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --seed ${SEED} --burnin $((MCMC_BURNIN/10.0)) --filters ${RB_NFILTERS}
+fi

@@ -103,7 +103,7 @@ monitors[mni++] = mnFile(psi, filename="{{ basename }}.trees",
 monitors[mni++] = mnModel(filename="{{ basename }}.log",
                           printgen=printgen, separator=TAB)
 #monitors[mni++] = mnAncestralState(tree=psi, ctmc=seq,
-                                    filename="{{ basename }}.ancestral_states.log",
+#                                   filename="{{ basename }}.ancestral_states.log",
 #                                   type="DNA", printgen=printgen, separator=TAB)
 monitors[mni++] = mnJointConditionalAncestralState(tree=psi, ctmc=seq,
                                                    filename="{{ basename }}.ancestral_states.log",
