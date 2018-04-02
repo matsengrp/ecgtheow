@@ -29,6 +29,9 @@ if __name__ == '__main__':
         '--thin', type=int, required=True,
         help="The MCMC sampling frequency.")
     parser.add_argument(
+        '--output-dir', type=str,
+        help="The name of the output directory.")
+    parser.add_argument(
         '--xml-path',
         help="The xml output file path.")
 
@@ -54,5 +57,5 @@ if __name__ == '__main__':
                              undefined=jinja2.StrictUndefined,
                              trim_blocks=True, lstrip_blocks=True)
 
-    xml_path = args.xml_path or ("runs/" + temp_vars["basename"] + ".xml")
+    xml_path = args.xml_path or (args.output_dir + "/runs/" + temp_vars["basename"] + ".xml")
     env.get_template(args.template_path).stream(**temp_vars).dump(xml_path)

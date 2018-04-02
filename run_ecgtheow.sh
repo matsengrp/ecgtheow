@@ -120,20 +120,20 @@ seqmagick convert --include-from-file ${OUTPUT_DIR}/data/healthy_seqs.nprune${NP
 python/annotate_fasttree_tree.py ${OUTPUT_DIR}/data/healthy_seqs.tre ${OUTPUT_DIR}/data/healthy_seqs.nprune${NPRUNE}.ids --naive naive --seed ${SEED}
 
 # Trim off site columns with full N-padding.
-awk '/^[^>]/ {gsub("N", "-", $0)} {print}' < data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta > data/temp.fasta
-seqmagick mogrify --squeeze data/temp.fasta
-awk '/^[^>]/ {gsub("-", "N", $0)} {print}' < data/temp.fasta > data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta
-rm data/temp.fasta
+awk '/^[^>]/ {gsub("N", "-", $0)} {print}' < ${OUTPUT_DIR}/data/healthy_seqs.nprune${NPRUNE}.fasta > ${OUTPUT_DIR}/data/temp.fasta
+seqmagick mogrify --squeeze ${OUTPUT_DIR}/data/temp.fasta
+awk '/^[^>]/ {gsub("-", "N", $0)} {print}' < ${OUTPUT_DIR}/data/temp.fasta > ${OUTPUT_DIR}/data/healthy_seqs.nprune${NPRUNE}.fasta
+rm ${OUTPUT_DIR}/data/temp.fasta
 
 # Construct the BEAST XML input file.
-python/generate_beast_xml_input.py --naive naive --seed ${SEED} templates/beast_template.xml data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta --iter ${MCMC_ITER} --thin ${MCMC_THIN}
+python/generate_beast_xml_input.py --naive naive --seed ${SEED} templates/beast_template.xml ${OUTPUT_DIR}/data/healthy_seqs.nprune${NPRUNE}.fasta --iter ${MCMC_ITER} --thin ${MCMC_THIN} --output-dir ${OUTPUT_DIR}
 
 # Run BEAST.
-java -Xms64m -Xmx2048m -Djava.library.path=${BEAGLE_DIR} -Dbeast.plugins.dir=beast/plugins -jar ${BEAST_DIR}/lib/beast.jar -warnings -seed 1 -overwrite runs/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.xml
-if [ -e "${SEED}.family_0.healthy.seedpruned.${NPRUNE}.log" ]
-then
-  mv ${SEED}.family_0.healthy.seedpruned.${NPRUNE}.* runs/
-fi
+java -Xms64m -Xmx2048m -Djava.library.path=${BEAGLE_DIR} -Dbeast.plugins.dir=beast/plugins -jar ${BEAST_DIR}/lib/beast.jar -warnings -seed 1 -overwrite ${OUTPUT_DIR}/runs/healthy_seqs.nprune${NPRUNE}.xml
+# if [ -e "healthy_seqs.nprune${NPRUNE}.log" ]
+# then
+  mv healthy_seqs.nprune${NPRUNE}* ${OUTPUT_DIR}/runs/
+# fi
 
 # Summarize the BEAST results.
 python/trees_to_counted_ancestors.py runs/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.trees data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta --seed ${SEED} --burnin ${MCMC_BURNIN} --filters ${ASR_NFILTERS//,/ }
