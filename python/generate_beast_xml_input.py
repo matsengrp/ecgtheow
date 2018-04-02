@@ -33,12 +33,17 @@ if __name__ == '__main__':
         help="The name of the output directory.")
     parser.add_argument(
         '--xml-path',
-        help="The xml output file path.")
+        help="The XML output file path.")
 
     args = parser.parse_args()
 
     args.fasta_path = args.fasta_path.lstrip("./")
-    filename = re.split("/", args.fasta_path)[-1]
+    if args.xml_path is not None:
+        xml_base = os.path.splitext(args.xml_path)[0]
+    else:
+        fasta_path = re.split("/", args.fasta_path)[-1]
+        xml_base = os.path.splitext(fasta_path)[0]
+        xml_base = args.output_dir + "/runs/" + xml_base
 
     id_seq = parse_fasta_seqs(args.fasta_path)
 
@@ -50,12 +55,12 @@ if __name__ == '__main__':
         naive=args.naive,
         iter=args.iter,
         thin=args.thin,
-        basename=os.path.splitext(filename)[0]
+        basename=xml_base
     )
 
     env = jinja2.Environment(loader = jinja2.FileSystemLoader('.'),
                              undefined=jinja2.StrictUndefined,
                              trim_blocks=True, lstrip_blocks=True)
 
-    xml_path = args.xml_path or (args.output_dir + "/runs/" + temp_vars["basename"] + "_beast.xml")
-    env.get_template(args.template_path).stream(**temp_vars).dump(xml_path)
+    env.get_template(args.template_path).stream(**temp_vars).dump(xml_base + "_beast.xml")
+

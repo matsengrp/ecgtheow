@@ -129,7 +129,7 @@ rm ${OUTPUT_DIR}/data/temp.fasta
 python/generate_beast_xml_input.py --naive naive --seed ${SEED} templates/beast_template.xml ${OUTPUT_DIR}/data/${OUTPUT_DIR}.fasta --iter ${MCMC_ITER} --thin ${MCMC_THIN} --output-dir ${OUTPUT_DIR}
 
 # Run BEAST.
-java -Xms64m -Xmx2048m -Djava.library.path=${BEAGLE_DIR} -Dbeast.plugins.dir=beast/plugins -jar ${BEAST_DIR}/lib/beast.jar -warnings -seed 1 -overwrite ${OUTPUT_DIR}/data/${OUTPUT_DIR}_beast.xml
+java -Xms64m -Xmx2048m -Djava.library.path=${BEAGLE_DIR} -Dbeast.plugins.dir=beast/plugins -jar ${BEAST_DIR}/lib/beast.jar -warnings -seed 1 -overwrite ${OUTPUT_DIR}/runs/${OUTPUT_DIR}_beast.xml
 # if [ -e "healthy_seqs.nprune${NPRUNE}.log" ]
 # then
   mv healthy_seqs.nprune${NPRUNE}* ${OUTPUT_DIR}/runs/
