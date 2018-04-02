@@ -29,13 +29,21 @@ if __name__ == '__main__':
         '--thin', type=int, required=True,
         help="The MCMC sampling frequency.")
     parser.add_argument(
+        '--output-dir', type=str,
+        help="The name of the output directory.")
+    parser.add_argument(
         '--rev-path',
         help="The Rev output file path.")
 
     args = parser.parse_args()
 
     args.fasta_path = args.fasta_path.lstrip("./")
-    filename = re.split("/", args.fasta_path)[-1]
+    if args.rev_path is not None:
+        rev_base = os.path.splitext(args.rev_path)[0]
+    else:
+        fasta_path = re.split("/", args.fasta_path)[-1]
+        rev_base = os.path.splitext(fasta_path)[0]
+        rev_base = args.output_dir + "/runs/" + rev_base + "_rb"
 
     id_seq = parse_fasta_seqs(args.fasta_path)
 
@@ -47,12 +55,11 @@ if __name__ == '__main__':
         naive=args.naive,
         iter=args.iter,
         thin=args.thin,
-        basename=os.path.splitext(filename)[0]
+        basename=rev_base
     )
 
     env = jinja2.Environment(loader = jinja2.FileSystemLoader('.'),
                              undefined=jinja2.StrictUndefined,
                              trim_blocks=True, lstrip_blocks=True)
 
-    rev_path = args.rev_path or ("runs/" + temp_vars["basename"] + ".rev")
-    env.get_template(args.template_path).stream(**temp_vars).dump(rev_path)
+    env.get_template(args.template_path).stream(**temp_vars).dump(rev_base + ".rev")
