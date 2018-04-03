@@ -129,3 +129,5 @@ mymcmc.run({{ iter }})
 # ASR summary tree?
 #asr_tree = ancestralStateTree(map_tree,ancestral_state_trace_vector=asrtrace,tree_trace=treetrace,
 #                              "output/asr.tre",burnin=0)
+
+quit()
