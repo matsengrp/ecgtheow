@@ -53,7 +53,8 @@ if __name__ == '__main__':
     # Do we need to apply the naive sequence correction?
     naive_name = "naive" if args.naive_correction else "_naive_"
     id_seq[naive_name] = id_seq[args.naive]
-    del id_seq[args.naive] if naive_name != args.naive
+    if naive_name != args.naive:
+        del id_seq[args.naive]
     args.naive = naive_name
     args.fasta_path = os.path.splitext(args.fasta_path)[0] + "_rb.fasta"
     write_to_fasta(id_seq, args.fasta_path)
