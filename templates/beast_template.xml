@@ -218,9 +218,9 @@
 	      <strictClockBranchRates idref="branchRates"/>
 	    </prior>
 	    <likelihood id="likelihood">
-				{% if naive_correction %}
+	      {% if naive_correction %}
 	      <amritCorrection idref="correction"/>
-				{% endif %}
+	      {% endif %}
 	      <ancestralTreeLikelihood idref="treeLikelihood"/>
 	    </likelihood>
 	  </posterior>
