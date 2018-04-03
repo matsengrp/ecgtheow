@@ -51,19 +51,19 @@ if __name__ == '__main__':
     assert args.naive in id_seq, "Sequence %r not found in FASTA file." % args.naive
 
     # Do we need to apply the naive sequence correction?
-    if args.naive_correction:
-        id_seq["naive"] = id_seq[args.naive]
-        del id_seq[args.naive]
-        args.fasta_path = os.path.splitext(args.fasta_path)[0] + "_rb.fasta"
-        write_to_fasta(id_seq, args.fasta_path)
+    naive_name = "naive" if args.naive_correction else "_naive_"
+    id_seq[naive_name] = id_seq[args.naive]
+    del id_seq[args.naive] if naive_name != args.naive
+    args.naive = naive_name
+    args.fasta_path = os.path.splitext(args.fasta_path)[0] + "_rb.fasta"
+    write_to_fasta(id_seq, args.fasta_path)
 
     temp_vars = dict(
         fasta_path=args.fasta_path,
         naive=args.naive,
         iter=args.iter,
         thin=args.thin,
-        basename=rev_base,
-        naive_correction=args.naive_correction
+        basename=rev_base
     )
 
     env = jinja2.Environment(loader = jinja2.FileSystemLoader('.'),
