@@ -1,3 +1,6 @@
 [submodule "lib/cft"]
 	path = lib/cft
 	url = https://github.com/matsengrp/cft.git
+[submodule "lib/revbayes"]
+	path = lib/revbayes
+	url = https://github.com/Irrationone/revbayes.git

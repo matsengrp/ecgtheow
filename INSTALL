@@ -11,3 +11,6 @@ printf '#!/bin/sh\n\nunset PYTHONNOUSERSITE' > $CONDA_PREFIX/etc/conda/deactivat
 conda install -y biopython graphviz jinja2 psutil python-graphviz pyyaml
 conda install -y -c bioconda colorbrewer dendropy seqmagick
 conda install -y -c etetoolkit ete3
+
+# Compile RevBayes.
+cd lib/revbayes/projects/cmake && ./build.sh
