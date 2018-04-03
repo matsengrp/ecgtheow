@@ -20,9 +20,6 @@ if __name__ == '__main__':
         '--naive', type=str, required=True,
         help="The name of the naive sequence.")
     parser.add_argument(
-        '--seed', type=str, required=True,
-        help="The name of the seed sequence.")
-    parser.add_argument(
         '--iter', type=int, required=True,
         help="The number of total MCMC iterations.")
     parser.add_argument(
@@ -49,7 +46,6 @@ if __name__ == '__main__':
     id_seq = parse_fasta_seqs(args.fasta_path)
 
     assert args.naive in id_seq, "Sequence %r not found in FASTA file." % args.naive
-    assert args.seed in id_seq, "Sequence %r not found in FASTA file." % args.seed
 
     temp_vars = dict(
         fasta_path=args.fasta_path,
