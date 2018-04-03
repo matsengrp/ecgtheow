@@ -158,7 +158,7 @@ fi
 if [ "${RUN_REVBAYES}" -eq 1 ]
 then
   python/generate_rb_rev_input.py templates/rb_template.rev ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --iter ${MCMC_ITER} --thin ${MCMC_THIN} --output-dir ${OUTPUT_DIR} ${NAIVE_CORRECTION}
-  revbayes/projects/cmake/rb ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb.rev
+  lib/revbayes/projects/cmake/rb ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb.rev
   python/revbayes_to_beast_trees.py ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb.trees ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb.ancestral_states.log
   python/trees_to_counted_ancestors.py ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb_beast.trees ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --seed ${SEED} --burnin ${MCMC_BURNIN} --filters ${ASR_NFILTERS//,/ }
 fi
