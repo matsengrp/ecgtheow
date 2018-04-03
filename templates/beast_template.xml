@@ -153,11 +153,13 @@
 	  <strictClockBranchRates idref="branchRates"/>
 	</ancestralTreeLikelihood>
 
+	{% if naive_correction %}
 	<amritCorrection id="correction">
 	  <treeModel idref="treeModel"/>
 	  <frequencyModel idref="freqModel"/>
 	  <sequence idref="{{ naive }}seq"/>
 	</amritCorrection>
+	{% endif %}
 
 	<!-- Define operators                                                        -->
 	<operators id="operators" optimizationSchedule="default">
@@ -216,7 +218,9 @@
 	      <strictClockBranchRates idref="branchRates"/>
 	    </prior>
 	    <likelihood id="likelihood">
+				{% if naive_correction %}
 	      <amritCorrection idref="correction"/>
+				{% endif %}
 	      <ancestralTreeLikelihood idref="treeLikelihood"/>
 	    </likelihood>
 	  </posterior>

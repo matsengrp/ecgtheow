@@ -80,6 +80,11 @@ do
       shift 1
       NARGS=$((NARGS-1))
       ;;
+    --naive-correction)
+      NAIVE_CORRECTION="--naive-correction"
+      shift 1
+      NARGS=$((NARGS-1))
+      ;;
     *)
       echo "ERROR: Please specify valid command line arguments."
       exit 1
@@ -95,6 +100,8 @@ if [ -z "${ASR_NFILTERS}" ]; then ASR_NFILTERS="50,100"; fi
 if [ -z "${OVERWRITE}" ]; then OVERWRITE=0; fi
 if [ -z "${RUN_BEAST}" ]; then RUN_BEAST=0; fi
 if [ -z "${RUN_REVBAYES}" ]; then RUN_REVBAYES=0; fi
+if [ -z "${NAIVE_CORRECTION}" ]; then NAIVE_CORRECTION=""; fi
+
 
 FAIL=0
 if [ -z "${DATA_DIR}" ]; then echo "ERROR: Please specify the '--data-dir' command line argument."; FAIL=1; fi
@@ -143,7 +150,7 @@ rm ${OUTPUT_DIR}/data/temp.fasta
 # 3) Summarize the results.
 if [ "${RUN_BEAST}" -eq 1 ]
 then
-  python/generate_beast_xml_input.py templates/beast_template.xml ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --iter ${MCMC_ITER} --thin ${MCMC_THIN} --output-dir ${OUTPUT_DIR}
+  python/generate_beast_xml_input.py templates/beast_template.xml ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --iter ${MCMC_ITER} --thin ${MCMC_THIN} --output-dir ${OUTPUT_DIR} ${NAIVE_CORRECTION}
   java -Xms64m -Xmx2048m -Djava.library.path=${BEAGLE_DIR} -Dbeast.plugins.dir=beast/plugins -jar ${BEAST_DIR}/lib/beast.jar -warnings -seed 1 -overwrite ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_beast.xml
   python/trees_to_counted_ancestors.py ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_beast.trees ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --seed ${SEED} --burnin ${MCMC_BURNIN} --filters ${ASR_NFILTERS//,/ }
 fi

@@ -32,6 +32,9 @@ if __name__ == '__main__':
     group.add_argument(
         '--xml-path',
         help="The XML output file path.")
+    parser.add_argument(
+        '--naive-correction', type=bool, action='store_true',
+        help="Should we apply the naive sequence correction?")
 
     args = parser.parse_args()
 
@@ -52,7 +55,8 @@ if __name__ == '__main__':
         naive=args.naive,
         iter=args.iter,
         thin=args.thin,
-        basename=xml_base
+        basename=xml_base,
+        naive_correction=args.naive_correction
     )
 
     env = jinja2.Environment(loader = jinja2.FileSystemLoader('.'),
