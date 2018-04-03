@@ -14,10 +14,12 @@ if __name__ == '__main__':
         'asrs_path', type=str,
         help="Path to RevBayes ASR file.")
     parser.add_argument(
-        '--output-path', type=str, required=True,
+        '--output-path', type=str,
         help="Path to output BEAST trees.")
 
     args = parser.parse_args()
+
+    output_base = os.path.splitext(args.output_path or args.trees_path)[0]
 
     # Annotate the trees with ASR sequences.
     tree_strs = pd.read_csv(args.trees_path, sep="\t")["psi"].tolist()
@@ -37,4 +39,4 @@ if __name__ == '__main__':
         trees.append(tree)
 
     # Output the BEAST-formatted trees.
-    trees.write_to_path(dest=args.output_path, schema="nexus")
+    trees.write_to_path(dest=output_base + "_beast.trees", schema="nexus")

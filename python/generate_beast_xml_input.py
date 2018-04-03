@@ -63,4 +63,3 @@ if __name__ == '__main__':
                              trim_blocks=True, lstrip_blocks=True)
 
     env.get_template(args.template_path).stream(**temp_vars).dump(xml_base + ".xml")
-
