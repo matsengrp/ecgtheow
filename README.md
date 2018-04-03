@@ -16,7 +16,7 @@ Clone the repository using the following command:
 
     git clone --recursive https://github.com/matsengrp/ecgtheow.git
 
-Then, create the ecgtheow conda environment and compile RevBayes by running `ecgtheow/INSTALL`.
+Then, create the ecgtheow conda environment and compile RevBayes by running `./INSTALL` in the ecgtheow root directory.
 
 # Example usage
 
