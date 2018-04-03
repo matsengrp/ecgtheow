@@ -5,7 +5,6 @@ set -e
 # Parse the command line arguments.
 NARGS="$#"
 ARGS="$@"
-IFS=","
 
 if [ "${NARGS}" -eq 0 ]
   then
@@ -94,8 +93,8 @@ if [ -z "${MCMC_THIN}" ]; then MCMC_THIN=1000; fi
 if [ -z "${MCMC_BURNIN}" ]; then MCMC_BURNIN=1000; fi
 if [ -z "${ASR_NFILTERS}" ]; then ASR_NFILTERS="50,100"; fi
 if [ -z "${OVERWRITE}" ]; then OVERWRITE=0; fi
-if [ -z "${RUN_BEAST}" ]; then RUN_BEAST=1; fi
-if [ -z "${RUN_REVBAYES}" ]; then RUN_REVBAYES=1; fi
+if [ -z "${RUN_BEAST}" ]; then RUN_BEAST=0; fi
+if [ -z "${RUN_REVBAYES}" ]; then RUN_REVBAYES=0; fi
 
 FAIL=0
 if [ -z "${DATA_DIR}" ]; then echo "ERROR: Please specify the '--data-dir' command line argument."; FAIL=1; fi
@@ -151,11 +150,7 @@ fi
 
 if [ "${RUN_REVBAYES}" -eq 1 ]
 then
-  python/generate_rb_rev_input.py --naive naive --seed ${SEED} templates/rb_template.rev ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --iter $((MCMC_ITER/10)) --thin $((MCMC_THIN/10)) --output-dir ${OUTPUT_DIR}
-  revbayes/projects/cmake/rb ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}_rb.rev
-  for NFILTER in ${ASR_NFILTERS}
-  do
-    RB_NFILTERS="${RB_NFILTERS} $((NFILTER/10))"
-  done
-  python/trees_to_counted_ancestors.py ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rev.trees ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --seed ${SEED} --burnin $((MCMC_BURNIN/10)) --filters ${RB_NFILTERS}
+  python/generate_rb_rev_input.py --naive naive --seed ${SEED} templates/rb_template.rev ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --iter ${MCMC_ITER} --thin ${MCMC_THIN} --output-dir ${OUTPUT_DIR}
+  ../revbayes/projects/cmake/rb ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb.rev
+  python/trees_to_counted_ancestors.py ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rev.trees ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --seed ${SEED} --burnin ${MCMC_BURNIN} --filters ${ASR_NFILTERS//,/ }
 fi
