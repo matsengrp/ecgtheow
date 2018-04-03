@@ -28,10 +28,11 @@ if __name__ == '__main__':
     parser.add_argument(
         '--thin', type=int, required=True,
         help="The MCMC sampling frequency.")
-    parser.add_argument(
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument(
         '--output-dir', type=str,
         help="The name of the output directory.")
-    parser.add_argument(
+    group.add_argument(
         '--rev-path',
         help="The Rev output file path.")
 
