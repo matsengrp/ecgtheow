@@ -33,7 +33,7 @@ if __name__ == '__main__':
         '--xml-path',
         help="The XML output file path.")
     parser.add_argument(
-        '--naive-correction', type=bool, action='store_true',
+        '--naive-correction', action='store_true',
         help="Should we apply the naive sequence correction?")
 
     args = parser.parse_args()
