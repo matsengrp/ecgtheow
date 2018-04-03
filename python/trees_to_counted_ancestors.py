@@ -55,7 +55,7 @@ if __name__ == '__main__':
         '--burnin', type=int, required=True,
         help="How many entries to remove as burnin.")
     parser.add_argument(
-        '--naive', default='naive',
+        '--naive', required=True,
         help="The name of the naive sequence.")
     parser.add_argument(
         '--seed', required=True,
