@@ -159,7 +159,7 @@ def simulation_setting(c):
 def _simulation_posterior_seqs(outdir, c):
     return dict()
 @w.add_target()
-def _simulation_posterior_trees(outdir, c):
+def _simulation_posterior_samples(outdir, c):
     return dict()
 # Need to add this to our tripl nestly wrapper
 #w.add_aggregate('simulation_posterior_seqs', dict)
@@ -249,7 +249,7 @@ def ecgtheow_counted_ancestors(outdir, c):
 @w.add_target()
 def _process_posterior(outdir, c):
     tgt = env.Command(
-        [path.join(outdir, 'lineage_posterior.' + x) for x in ['trees.csv', 'seqs.csv']],
+        [path.join(outdir, 'lineage_posterior.' + x) for x in ['posterior_samples.csv', 'posterior_seqs.csv']],
         [c['seed'], c['tree'], c['posterior'], c['sampled_seqs']],
         './python/process_beast.py ${SOURCES[1]} ${SOURCES[2]} ' \
             + '--seed `cat $SOURCE` --naive simcell_1 --burnin 1000 $TARGETS')
@@ -263,9 +263,9 @@ def posterior_seqs(outdir, c):
     return tgt
 
 @w.add_target()
-def posterior_trees(outdir, c):
+def posterior_samples(outdir, c):
     tgt = c['_process_posterior'][0]
-    c['_simulation_posterior_trees'][c['simulation']['id']] = tgt
+    c['_simulation_posterior_samples'][c['simulation']['id']] = tgt
     return tgt
 
 
@@ -281,18 +281,12 @@ def combined_posterior_seqs(outdir, c):
         'csvstack -n simulation -g {} $SOURCES > $TARGET'.format(','.join(str(x) for x in seq_files.keys())))
 
 @w.add_target()
-def combined_posterior_trees(outdir, c):
-    tree_files = c['_simulation_posterior_trees']
+def combined_posterior_samples(outdir, c):
+    tree_files = c['_simulation_posterior_samples']
     return env.Command(
-        path.join(outdir, 'combined_posterior_trees.csv'),
+        path.join(outdir, 'combined_posterior_samples.csv'),
         tree_files.values(),
         'csvstack -n simulation -g {} $SOURCES > $TARGET'.format(','.join(str(x) for x in tree_files.keys())))
-
-#@w.add_target()
-#def compare(outdir, c):
-    #return env.Command(
-        #path.join(outdir, ''),
-        #'./python/process_beast.py ')
 
 
 # trigger final metadata build
