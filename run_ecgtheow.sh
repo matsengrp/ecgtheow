@@ -70,6 +70,21 @@ do
       shift 1
       NARGS=$((NARGS-1))
       ;;
+    --run-beast)
+      RUN_BEAST=1
+      shift 1
+      NARGS=$((NARGS-1))
+      ;;
+    --run-revbayes)
+      RUN_REVBAYES=1
+      shift 1
+      NARGS=$((NARGS-1))
+      ;;
+    --naive-correction)
+      NAIVE_CORRECTION="--naive-correction"
+      shift 1
+      NARGS=$((NARGS-1))
+      ;;
     *)
       echo "ERROR: Please specify valid command line arguments."
       exit 1
@@ -83,6 +98,10 @@ if [ -z "${MCMC_THIN}" ]; then MCMC_THIN=1000; fi
 if [ -z "${MCMC_BURNIN}" ]; then MCMC_BURNIN=1000; fi
 if [ -z "${ASR_NFILTERS}" ]; then ASR_NFILTERS="50,100"; fi
 if [ -z "${OVERWRITE}" ]; then OVERWRITE=0; fi
+if [ -z "${RUN_BEAST}" ]; then RUN_BEAST=0; fi
+if [ -z "${RUN_REVBAYES}" ]; then RUN_REVBAYES=0; fi
+if [ -z "${NAIVE_CORRECTION}" ]; then NAIVE_CORRECTION=""; fi
+
 
 FAIL=0
 if [ -z "${DATA_DIR}" ]; then echo "ERROR: Please specify the '--data-dir' command line argument."; FAIL=1; fi
@@ -102,43 +121,44 @@ then
 fi
 
 # Make the data and runs directories.
-mkdir -p data runs
+mkdir -p ${OUTPUT_DIR}/data ${OUTPUT_DIR}/runs
 
-# Print the command line call to a file.
-echo ${ARGS} > args.log
+# Print the command line arguments to a file.
+echo ${ARGS} > ${OUTPUT_DIR}/args.log
 
 # Parse the partis YAML info file and get the "healthy" sequences.
 export PARTIS=${PWD%/}/lib/cft/partis
-python/parse_partis_data.py ${DATA_DIR} --sample ${SAMPLE} --seed ${SEED}
+python/parse_partis_data.py ${DATA_DIR} --sample ${SAMPLE} --seed ${SEED} --output-dir ${OUTPUT_DIR}
 
 # Generate a tree and prune sequences from the clonal family.
-FastTree -nt data/${SEED}.family_0.healthy.fasta > data/${SEED}.family_0.healthy.tre
-lib/cft/bin/prune.py --naive naive --seed ${SEED} data/${SEED}.family_0.healthy.tre -n ${NPRUNE} --strategy seed_lineage data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids
-seqmagick convert --include-from-file data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids data/${SEED}.family_0.healthy.fasta data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta
+FastTree -nt ${OUTPUT_DIR}/data/healthy_seqs.fasta > ${OUTPUT_DIR}/data/healthy_seqs.tre
+lib/cft/bin/prune.py --naive naive --seed ${SEED} ${OUTPUT_DIR}/data/healthy_seqs.tre -n ${NPRUNE} --strategy seed_lineage ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.ids
+seqmagick convert --include-from-file ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.ids ${OUTPUT_DIR}/data/healthy_seqs.fasta ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta
 
 # Output the FastTree .PNG tree graphic highlighting the pruned nodes.
-python/annotate_fasttree_tree.py data/${SEED}.family_0.healthy.tre data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.ids --naive naive --seed ${SEED}
+python/annotate_fasttree_tree.py ${OUTPUT_DIR}/data/healthy_seqs.tre ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.ids --naive naive --seed ${SEED}
 
-# Construct the BEAST XML input file.
-python/generate_beast_xml_input.py --naive naive --seed ${SEED} templates/beast_template.xml data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta --iter ${MCMC_ITER} --thin ${MCMC_THIN}
+# Trim off site columns with full N-padding.
+awk '/^[^>]/ {gsub("N", "-", $0)} {print}' < ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta > ${OUTPUT_DIR}/data/temp.fasta
+seqmagick mogrify --squeeze ${OUTPUT_DIR}/data/temp.fasta
+awk '/^[^>]/ {gsub("-", "N", $0)} {print}' < ${OUTPUT_DIR}/data/temp.fasta > ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta
+rm ${OUTPUT_DIR}/data/temp.fasta
 
-# Run BEAST.
-java -Xms64m -Xmx2048m -Djava.library.path=${BEAGLE_DIR} -Dbeast.plugins.dir=beast/plugins -jar ${BEAST_DIR}/lib/beast.jar -warnings -seed 1 -overwrite runs/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.xml
-if [ -e "${SEED}.family_0.healthy.seedpruned.${NPRUNE}.log" ]
+# For both BEAST and RevBayes:
+# 1) Construct the input file;
+# 2) Run the program;
+# 3) Summarize the results.
+if [ "${RUN_BEAST}" -eq 1 ]
 then
-  mv ${SEED}.family_0.healthy.seedpruned.${NPRUNE}.* runs/
+  python/generate_beast_xml_input.py templates/beast_template.xml ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --iter ${MCMC_ITER} --thin ${MCMC_THIN} --output-dir ${OUTPUT_DIR} ${NAIVE_CORRECTION}
+  java -Xms64m -Xmx2048m -Djava.library.path=${BEAGLE_DIR} -Dbeast.plugins.dir=beast/plugins -jar ${BEAST_DIR}/lib/beast.jar -warnings -seed 1 -overwrite ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_beast.xml
+  python/trees_to_counted_ancestors.py ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_beast.trees ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --seed ${SEED} --burnin ${MCMC_BURNIN} --filters ${ASR_NFILTERS//,/ }
 fi
 
-# Summarize the BEAST results.
-python/trees_to_counted_ancestors.py runs/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.trees data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta --seed ${SEED} --burnin ${MCMC_BURNIN} --filters ${ASR_NFILTERS//,/ }
-
-# Move the results to the output directory.
-if [ "${OVERWRITE}" -eq 1 ]
+if [ "${RUN_REVBAYES}" -eq 1 ]
 then
-  mkdir -p ${OUTPUT_DIR}
-  cp -t ${OUTPUT_DIR} -r data/ runs/ args.log
-  rm -r data/ runs/ args.log
-else
-  mkdir ${OUTPUT_DIR}
-  mv -t ${OUTPUT_DIR} data/ runs/ args.log
+  python/generate_rb_rev_input.py templates/rb_template.rev ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --iter ${MCMC_ITER} --thin ${MCMC_THIN} --output-dir ${OUTPUT_DIR} ${NAIVE_CORRECTION}
+  lib/revbayes/projects/cmake/rb ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb.rev
+  python/revbayes_to_beast_trees.py ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb.trees ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb.ancestral_states.log
+  python/trees_to_counted_ancestors.py ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb_beast.trees ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --seed ${SEED} --burnin ${MCMC_BURNIN} --filters ${ASR_NFILTERS//,/ }
 fi
