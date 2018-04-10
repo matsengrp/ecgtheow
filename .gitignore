@@ -2,3 +2,6 @@ data
 inferences
 runs
 *.pyc
+*.log
+outdir
+output
