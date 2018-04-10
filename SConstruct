@@ -64,7 +64,7 @@ Script.AddOption('--test',
         dest='test_run',
         action='store_true',
         default=False,
-        help="Setting this flag does a test run for just a couple of seeds")
+        help="Setting this flag does a quick test run (low mcmc iter count and sample size)")
 
 Script.AddOption('--outdir',
         dest='outdir',
@@ -115,7 +115,7 @@ w = nestly_scons.SConsWrap(nest, options['outdir_base'], alias_environment=env)
 w = nestly_tripl.NestWrap(w,
         name='build',
         # Need to base hashing off of this for optimal incrementalization
-        metadata={'id': 'cft-build-' + build_time.replace(' ', '-'),
+        metadata={'id': ('test-' if options['test_run'] else '') + 'ecgtheow-build-' + build_time.replace(' ', '-'),
                   'time': build_time,
                   'command': " ".join(sys.argv),
                   'workdir': os.getcwd(),
@@ -217,26 +217,54 @@ def seed(outdir, c):
     return c['_process_sim'][1]
 
 
+
+@w.add_nest(full_dump=True)
+def method(c):
+    return [{'id': method + ('' if naive_correction else '-sanscorrection'),
+             'tool': method,
+             'naive_correction': naive_correction}
+            for method in ['revbayes', 'beast']
+            for naive_correction in [True, False]]
+
+
 #python/generate_beast_xml_input.py --naive naive --seed ${SEED} templates/beast_template.xml data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta --iter ${MCMC_ITER} --thin ${MCMC_THIN}
 @w.add_target()
-def beastfile(outdir, c):
-    return env.Command(
-        path.join(outdir, "lineage_reconstruction.xml"),
-        [c['seed'], "templates/beast_template.xml", c['sampled_seqs']],
-        "python/generate_beast_xml_input.py --naive simcell_1 --seed `cat $SOURCE`" \
-        + " --iter 10000000 --thin 1000 ${SOURCES[1]} ${SOURCES[2]} --xml-path $TARGET")
-
-@w.add_target()
 def posterior(outdir, c):
-    return env.SRun(
-        path.join(outdir, "sampled_seqs.trees"),
-        c['beastfile'],
-        "cd " + outdir + " && java -Xms64m -Xmx2048m" \
-        " -Djava.library.path=/home/matsengrp/local/lib" \
-        " -Dbeast.plugins.dir=" + path.join(os.getcwd(), "beast/plugins") + \
-        " -jar /home/matsengrp/local/BEASTv1.8.4/lib/beast.jar" \
-        " -warnings -seed 1 -overwrite" \
-        " " + path.basename(str(c['beastfile'][0])) + " > beastrun.log")
+    tool = c['method']['tool']
+    naive_correction = c['method']['naive_correction']
+    # Set mcmc iters based on whether or not its a test run
+    base_opts = " $SOURCES --naive simcell_1" + ('' if naive_correction else " --naive-correction")
+    if options['test_run']:
+        base_opts += " --iter 100000 --thin 10"
+    else:
+        base_opts += " --iter 10000000 --thin 1000"
+    if tool == 'beast':
+        config_file = env.Command(
+            path.join(outdir, "lineage_reconstruction.xml"),
+            ["templates/beast_template.xml", c['sampled_seqs']],
+            "python/generate_beast_xml_input.py --xml-path $TARGET " + base_opts)
+        return env.SRun(
+            path.join(outdir, "sampled_seqs.trees"),
+            config_file,
+            "cd " + outdir + " && java -Xms64m -Xmx2048m" \
+            # Need to abstract over this non-sense with env variables or something
+            " -Djava.library.path=/home/matsengrp/local/lib" \
+            " -Dbeast.plugins.dir=" + path.join(os.getcwd(), "beast/plugins") + \
+            " -jar /home/matsengrp/local/BEASTv1.8.4/lib/beast.jar" \
+            " -warnings -seed 1 -overwrite" \
+            " " + path.basename(str(config_file[0])) + " > beastrun.log")
+    elif tool == 'revbayes':
+        config_file = env.Command(
+            path.join(outdir, 'lineage_reconstruction.rev'),
+            ['templates/rb_template.rev', c['sampled_seqs']],
+            'python/generate_rb_rev_input.py --rev-path $TARGET ' + base_opts)
+        tgt = env.SRun(
+            path.join(outdir, 'sampled_seqs.trees'),
+            config_file,
+            'rb $SOURCE')
+        env.Depends(tgt, c['sampled_seqs'])
+        return tgt
+            
 
 @w.add_target()
 def ecgtheow_counted_ancestors(outdir, c):
