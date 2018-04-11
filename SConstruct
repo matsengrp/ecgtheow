@@ -220,7 +220,7 @@ def seed(outdir, c):
 
 @w.add_nest(full_dump=True)
 def method(c):
-    return [{'id': method + ('' if naive_correction else '-sanscorrection'),
+    return [{'id': method + ("-naive-corrected" if naive_correction else ''),
              'tool': method,
              'naive_correction': naive_correction}
             for method in ['revbayes', 'beast']
@@ -233,7 +233,7 @@ def posterior(outdir, c):
     tool = c['method']['tool']
     naive_correction = c['method']['naive_correction']
     # Set mcmc iters based on whether or not its a test run
-    base_opts = " $SOURCES --naive simcell_1" + ('' if naive_correction else " --naive-correction")
+    base_opts = " $SOURCES --naive simcell_1" + (" --naive_correction" if naive_correction else '')
     if options['test_run']:
         base_opts += " --iter 100000 --thin 10"
     else:
