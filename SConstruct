@@ -261,7 +261,7 @@ def posterior(outdir, c):
         tgt = env.SRun(
             path.join(outdir, 'sampled_seqs.trees'),
             config_file,
-            'rb $SOURCE')
+            'lib/revbayes/projects/cmake/rb $SOURCE')
         env.Depends(tgt, c['sampled_seqs'])
         return tgt
             
