@@ -12,7 +12,7 @@ conda install -y biopython graphviz jinja2 matplotlib pandas psutil python-graph
 conda install -y -c bioconda colorbrewer dendropy seqmagick
 conda install -y -c etetoolkit ete3
 pip install nestly==0.6.1
-(cd lib/cft/deps/tripl && python setup.py install)
+(cd lib/tripl && python setup.py install)
 
 # Compile RevBayes.
 cd lib/revbayes/projects/cmake && ./build.sh
