@@ -244,22 +244,22 @@ def posterior(outdir, c):
             ["templates/beast_template.xml", c['sampled_seqs']],
             "python/generate_beast_xml_input.py --xml-path $TARGET " + base_opts)
         return env.SRun(
-            path.join(outdir, "sampled_seqs.trees"),
+            path.join(outdir, "lineage_reconstruction.trees"),
             config_file,
-            "cd " + outdir + " && java -Xms64m -Xmx2048m" \
+            "java -Xms64m -Xmx2048m" \
             # Need to abstract over this non-sense with env variables or something
             " -Djava.library.path=/home/matsengrp/local/lib" \
             " -Dbeast.plugins.dir=" + path.join(os.getcwd(), "beast/plugins") + \
             " -jar /home/matsengrp/local/BEASTv1.8.4/lib/beast.jar" \
             " -warnings -seed 1 -overwrite" \
-            " " + path.basename(str(config_file[0])) + " > beastrun.log")
+            " $SOURCE > beastrun.log")
     elif tool == 'revbayes':
         config_file = env.Command(
             path.join(outdir, 'lineage_reconstruction.rev'),
             ['templates/rb_template.rev', c['sampled_seqs']],
             'python/generate_rb_rev_input.py --rev-path $TARGET ' + base_opts)
         tgt = env.SRun(
-            path.join(outdir, 'sampled_seqs.trees'),
+            path.join(outdir, 'lineage_reconstruction.trees'),
             config_file,
             'rb $SOURCE')
         env.Depends(tgt, c['sampled_seqs'])
