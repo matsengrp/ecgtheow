@@ -9,7 +9,7 @@ printf '#!/bin/sh\n\nexport PYTHONNOUSERSITE=1' > $CONDA_PREFIX/etc/conda/activa
 printf '#!/bin/sh\n\nunset PYTHONNOUSERSITE' > $CONDA_PREFIX/etc/conda/deactivate.d/env_vars.sh
 
 conda install -y biopython graphviz jinja2 matplotlib pandas psutil python-graphviz pyyaml scons
-conda install -y -c bioconda colorbrewer dendropy seqmagick
+conda install -y -c bioconda colorbrewer dendropy jellyfish seqmagick
 conda install -y -c etetoolkit ete3
 pip install nestly==0.6.1
 (cd lib/tripl && python setup.py install)
