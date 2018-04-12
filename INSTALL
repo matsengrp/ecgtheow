@@ -12,5 +12,16 @@ conda install -y biopython graphviz jinja2 pandas psutil python-graphviz pyyaml
 conda install -y -c bioconda colorbrewer dendropy seqmagick
 conda install -y -c etetoolkit ete3
 
+wd=`pwd`
+tmpdir=/tmp/ecgtheow-install/$RANDOM/
+mkdir -p $tmpdir
+cd $tmpdir
+git clone https://github.com/metasoarous/tripl.git
+cd tripl
+python setup.py install
+cd $wd
+rm -rf $tmpdir
+
+
 # Compile RevBayes.
 cd lib/revbayes/projects/cmake && ./build.sh
