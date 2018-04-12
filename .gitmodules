@@ -4,3 +4,6 @@
 [submodule "lib/revbayes"]
 	path = lib/revbayes
 	url = https://github.com/Irrationone/revbayes.git
+[submodule "lib/bcr-phylo-benchmark"]
+	path = lib/bcr-phylo-benchmark
+	url = https://github.com/matsengrp/bcr-phylo-benchmark.git
