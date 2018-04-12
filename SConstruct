@@ -44,7 +44,7 @@ from tripl import nestly as nestly_tripl
 environ = os.environ.copy()
 environ['TMPDIR'] =  '/tmp' # for bcr-phylo-benchmark/simulation
 
-bcr_phylo_benchmark_dir = 'bcr-phylo-benchmark'
+bcr_phylo_benchmark_dir = '../bcr-phylo-benchmark'
 
 
 env = Environment(ENV=environ)
@@ -138,8 +138,8 @@ def simulation_setting(c):
     return [{
         'id': 'default',
         'model': 'S5F',
-        'mutability_file': path.join(bcr_phylo_benchmark_dir, "S5F/Mutability.csv"),
-        'substitution_file': path.join(bcr_phylo_benchmark_dir, "S5F/Substitution.csv"),
+        'mutability_file': path.join(bcr_phylo_benchmark_dir, "motifs/Mutability_S5F.csv"),
+        'substitution_file': path.join(bcr_phylo_benchmark_dir, "motifs/Substitution_S5F.csv"),
         'random_seq_file': path.join(bcr_phylo_benchmark_dir, "sequence_data/AbPair_naive_seqs.fa"),
         'lambda': 2.0,
         'lambda0': 0.365,
@@ -193,7 +193,7 @@ def tree(outdir, c):
                 +  " --carry_cap " + str(sim_setting['carry_cap']) \
                 +  " --skip_update " + str(sim_setting['skip_update']) \
                 + (" --selection" if sim_setting['selection'] else "") \
-                +  " --random_seed " + str(c['simulation']['id']) \
+                #+  " --random_seed " + str(c['simulation']['id']) \
                 +  " > " + outbase + ".log")
     for x in [path.join(bcr_phylo_benchmark_dir, "bin/simulator.py")]:
         env.Depends(simulated_tree, x)
@@ -233,7 +233,7 @@ def posterior(outdir, c):
     tool = c['method']['tool']
     naive_correction = c['method']['naive_correction']
     # Set mcmc iters based on whether or not its a test run
-    base_opts = " $SOURCES --naive simcell_1" + (" --naive_correction" if naive_correction else '')
+    base_opts = " $SOURCES --naive simcell_1" + (" --naive-correction" if naive_correction else '')
     if options['test_run']:
         base_opts += " --iter 100000 --thin 10"
     else:
