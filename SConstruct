@@ -212,7 +212,14 @@ def _process_sim(outdir, c):
 
 @w.add_target()
 def sampled_seqs(outdir, c):
-    return c['_process_sim'][0]
+    temp_fasta = path.join(outdir, "temp.fasta")
+    return env.Command(
+        path.join(outdir, 'trimmed_sampled_seqs.fasta'),
+        c['_process_sim'][0],
+        "awk \'/^[^>]/ {gsub(\"N\", \"-\", $0)} {print}\' < $SOURCE > " + temp_fasta + ";" + \
+        "seqmagick mogrify --squeeze " + temp_fasta + ";" + \
+        "awk \'/^[^>]/ {gsub(\"-\", \"N\", $0)} {print}\' < " + temp_fasta + " > $TARGET;" + \
+        "rm " + temp_fasta + ";")
 
 @w.add_target()
 def seed(outdir, c):
@@ -259,11 +266,15 @@ def posterior(outdir, c):
             path.join(outdir, 'lineage_reconstruction.rev'),
             ['templates/rb_template.rev', c['sampled_seqs']],
             'python/generate_rb_rev_input.py --rev-path $TARGET ' + base_opts)
-        tgt = env.SRun(
+        rb_tgt = env.SRun(
             path.join(outdir, 'lineage_reconstruction.trees'),
             config_file,
             'lib/revbayes/projects/cmake/rb $SOURCE')
-        env.Depends(tgt, c['sampled_seqs'])
+        env.Depends(rb_tgt, c['sampled_seqs'])
+        tgt = env.Command(
+            path.join(outdir, 'lineage_reconstruction_beast.trees'),
+            [path.join(outdir, x) for x in ['lineage_reconstruction.trees', 'lineage_reconstruction.ancestral_states.log']],
+            "python/revbayes_to_beast_trees.py $SOURCES --output-path " + path.join(outdir, 'lineage_reconstruction.trees'))
         return tgt
             
 
@@ -298,6 +309,7 @@ def posterior_samples(outdir, c):
     return tgt
 
 
+w.pop()
 w.pop()
 
 
