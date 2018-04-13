@@ -44,14 +44,15 @@ from tripl import nestly as nestly_tripl
 environ = os.environ.copy()
 environ['TMPDIR'] =  '/tmp' # for bcr-phylo-benchmark/simulation
 
-bcr_phylo_benchmark_dir = '../bcr-phylo-benchmark'
+#bcr_phylo_benchmark_dir = '../bcr-phylo-benchmark'
 
 
 env = Environment(ENV=environ)
 # Add stuff to PATH
+# Java binary on stoat
 env.PrependENVPath('PATH', '/app/easybuild/software/Java/1.8.0_92/bin')
-env.PrependENVPath('PATH', path.join(bcr_phylo_benchmark_dir, 'bin'))
-env.PrependENVPath('PATH', 'bin')
+#env.PrependENVPath('PATH', path.join(bcr_phylo_benchmark_dir, 'bin'))
+#env.PrependENVPath('PATH', 'bin')
 
 
 ## Arguments
@@ -126,8 +127,8 @@ w = nestly_tripl.NestWrap(w,
                   'diff': git('diff'),
                   'status': git('status', '--porcelain')},
         always_build_metadata=options['always_build_metadata'],
-        base_namespace='cft',
-        id_attrs=['cft.dataset:id', 'cft.build:id'])
+        base_namespace='ecgtheow',
+        id_attrs=['ecgtheow.dataset:id', 'ecgtheow.build:id'])
 
 
 
@@ -138,9 +139,9 @@ def simulation_setting(c):
     return [{
         'id': 'default',
         'model': 'S5F',
-        'mutability_file': path.join(bcr_phylo_benchmark_dir, "motifs/Mutability_S5F.csv"),
-        'substitution_file': path.join(bcr_phylo_benchmark_dir, "motifs/Substitution_S5F.csv"),
-        'random_seq_file': path.join(bcr_phylo_benchmark_dir, "sequence_data/AbPair_naive_seqs.fa"),
+        'mutability_file': "lib/bcr-phylo-benchmark/motifs/Mutability_S5F.csv",
+        'substitution_file': "lib/bcr-phylo-benchmark/motifs/Substitution_S5F.csv",
+        'random_seq_file': "lib/bcr-phylo-benchmark/sequence_data/AbPair_naive_seqs.fa",
         'lambda': 2.0,
         'lambda0': 0.365,
         'T': 35,
@@ -180,7 +181,7 @@ def tree(outdir, c):
     simulated_tree = env.Command(
         outbase + "_lineage_tree.p",
         [sim_setting[x] for x in ['mutability_file', 'substitution_file', 'random_seq_file']],
-        "xvfb-run -a simulator.py --verbose" \
+        "xvfb-run -a lib/bcr-phylo-benchmark/bin/simulator.py --verbose" \
                 +  " --mutability ${SOURCES[0]}" \
                 +  " --substitution ${SOURCES[1]}" \
                 +  " --random_seq ${SOURCES[2]}" \
@@ -190,13 +191,14 @@ def tree(outdir, c):
                 +  " --T " + str(sim_setting['T']) \
                 +  " --n " + str(sim_setting['n']) \
                 +  " --target_dist " + str(sim_setting['target_dist']) \
+                +  " --target_count " + str(sim_setting['target_count']) \
                 +  " --carry_cap " + str(sim_setting['carry_cap']) \
                 +  " --skip_update " + str(sim_setting['skip_update']) \
                 + (" --selection" if sim_setting['selection'] else "") \
-                #+  " --random_seed " + str(c['simulation']['id']) \
+                +  " --random_seed " + str(c['simulation']['id']) \
                 +  " > " + outbase + ".log")
-    for x in [path.join(bcr_phylo_benchmark_dir, "bin/simulator.py")]:
-        env.Depends(simulated_tree, x)
+    #for x in [path.join(bcr_phylo_benchmark_dir, "bin/simulator.py")]:
+    env.Depends(simulated_tree, "lib/bcr-phylo-benchmark/bin/simulator.py")
     return simulated_tree
 
 
@@ -246,13 +248,12 @@ def posterior(outdir, c):
         return env.SRun(
             path.join(outdir, "lineage_reconstruction.trees"),
             config_file,
-            "java -Xms64m -Xmx2048m" \
+            "java -Xms64m -Xmx2048m" + \
             # Need to abstract over this non-sense with env variables or something
-            " -Djava.library.path=/home/matsengrp/local/lib" \
-            " -Dbeast.plugins.dir=" + path.join(os.getcwd(), "beast/plugins") + \
-            " -jar /home/matsengrp/local/BEASTv1.8.4/lib/beast.jar" \
-            " -warnings -seed 1 -overwrite" \
-            " $SOURCE > beastrun.log")
+            " -Djava.library.path=/home/matsengrp/local/lib" + \
+            " -Dbeast.plugins.dir=beast/plugins" + \
+            " -jar /home/matsengrp/local/BEASTv1.8.4/lib/beast.jar" + \
+            " -warnings -seed 1 -overwrite $SOURCE")
     elif tool == 'revbayes':
         config_file = env.Command(
             path.join(outdir, 'lineage_reconstruction.rev'),
@@ -271,7 +272,7 @@ def ecgtheow_counted_ancestors(outdir, c):
     return env.Command(
         path.join(outdir, 'ecgtheow_counted_ancestors.dnamap'),
         [c['seed'], c['posterior'], c['sampled_seqs']],
-        './python/trees_to_counted_ancestors.py ${SOURCES[1]} ${SOURCES[2]} ' \
+        'python/trees_to_counted_ancestors.py ${SOURCES[1]} ${SOURCES[2]} ' \
             + '--seed `cat $SOURCE` --naive simcell_1 --burnin 1000 --filters 50')
 
 @w.add_target()
@@ -279,9 +280,9 @@ def _process_posterior(outdir, c):
     tgt = env.Command(
         [path.join(outdir, 'lineage_posterior.' + x) for x in ['posterior_samples.csv', 'posterior_seqs.csv']],
         [c['seed'], c['tree'], c['posterior'], c['sampled_seqs']],
-        './python/process_beast.py ${SOURCES[1]} ${SOURCES[2]} ' \
+        'python/process_beast.py ${SOURCES[1]} ${SOURCES[2]} ' \
             + '--seed `cat $SOURCE` --naive simcell_1 --burnin 1000 $TARGETS')
-    env.Depends(tgt, './python/process_beast.py')
+    env.Depends(tgt, 'python/process_beast.py')
     return tgt
 
 @w.add_target()
