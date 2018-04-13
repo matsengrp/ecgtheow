@@ -20,7 +20,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-    output_base = os.path.splitext(args.output_path or args.trees_path)[0]
+    if args.output_path != "":
+        output_base = os.path.splitext(args.output_path)[0]
+    else:
+        output_base = os.path.splitext(args.trees_path)[0] + "_beast_format"
 
     # Annotate the trees with ASR sequences.
     tree_strs = pd.read_csv(args.trees_path, sep="\t")["psi"].tolist()
@@ -40,4 +43,4 @@ if __name__ == '__main__':
         trees.append(tree)
 
     # Output the BEAST-formatted trees.
-    trees.write_to_path(dest=output_base + "_beast_format.trees", schema="nexus")
+    trees.write_to_path(dest=output_base + ".trees", schema="nexus")
