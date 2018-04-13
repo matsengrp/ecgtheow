@@ -40,4 +40,4 @@ if __name__ == '__main__':
         trees.append(tree)
 
     # Output the BEAST-formatted trees.
-    trees.write_to_path(dest=output_base + "_beast.trees", schema="nexus")
+    trees.write_to_path(dest=output_base + "_beast_format.trees", schema="nexus")
