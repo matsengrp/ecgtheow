@@ -32,7 +32,8 @@ if __name__ == '__main__':
     annotation_path = yaml_dict["samples"][args.sample]["seeds"][args.seed]["cluster-annotation-file"]
     partition_path = yaml_dict["samples"][args.sample]["seeds"][args.seed]["partition-file"]
 
-    os.system("lib/cft/bin/process_partis.py" +\
+    os.system("export PARTIS=${PWD%/}/lib/cft/partis;" +\
+              "lib/cft/bin/process_partis.py" +\
               " --cluster-annotation-file " + annotation_path +\
               " --partition-file " + partition_path +\
               " --seqs-out " + args.output_path +\

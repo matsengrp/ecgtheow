@@ -127,7 +127,6 @@ mkdir -p ${OUTPUT_DIR}/data ${OUTPUT_DIR}/runs
 echo ${ARGS} > ${OUTPUT_DIR}/args.log
 
 # Parse the partis YAML info file and get the "healthy" sequences.
-export PARTIS=${PWD%/}/lib/cft/partis
 python/parse_partis_data.py ${DATA_DIR} --sample ${SAMPLE} --seed ${SEED} --output-path ${OUTPUT_DIR}/data/healthy_seqs.fasta
 
 # Generate a tree and prune sequences from the clonal family.
