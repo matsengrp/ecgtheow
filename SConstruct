@@ -93,25 +93,25 @@ Script.AddOption('--n',
         default=None,
         help='How many GC cells are downsampled? - simulation')
 
-Script.AddOption('--target_dist',
+Script.AddOption('--target-dist',
         dest="target_dist",
         type='str',
         default="10",
         help='Distance from naive to selection target - simulation')
 
-Script.AddOption('--target_count',
+Script.AddOption('--target-count',
         dest="target_count",
         type='str',
         default="10",
         help='Number of selection targets - simulation')
 
-Script.AddOption('--carry_cap',
+Script.AddOption('--carry-cap',
         dest="carry_cap",
         type='str',
         default="1000",
         help='The GC carrying capacity - simulation')
 
-Script.AddOption('--skip_update',
+Script.AddOption('--skip-update',
         dest="skip_update",
         type='str',
         default="100",
@@ -130,6 +130,24 @@ Script.AddOption("--cft-data",
         action="store_true",
         default=False,
         help="Should we use CFT data?")
+
+Script.AddOption("--data-dir",
+        dest="data_dir",
+        type="str",
+        default=None,
+        help="What data directory should we use? - CFT")
+
+Script.AddOption("--sample",
+        dest="sample",
+        type="str",
+        default=None,
+        help="What data sample should we use? - CFT")
+
+Script.AddOption("--seed",
+        dest="seed",
+        type="str",
+        default=None,
+        help="What seed should we use? - CFT")
 
 
 
@@ -173,6 +191,9 @@ def get_options(env):
 
         # CFT arguments
         cft_data = env.GetOption("cft_data"),
+        data_dir = env.GetOption("data_dir"),
+        sample = env.GetOption("sample"),
+        seed = env.GetOption("seed"),
 
         test_run = env.GetOption('test_run'),
         always_build_metadata = not env.GetOption('lazy_metadata'),
@@ -198,6 +219,8 @@ options = get_options(env)
 
 assert env.GetOption("help") or options["simulate_data"] != options["cft_data"], \
     "Exactly one of '--simulate-data' and '--cft-data' must be specified"
+assert env.GetOption("help") or options["simulate_data"] or all(options[x] for x in ["data_dir", "sample", "seed"]), \
+    "Please specify the '--data-dir', '--sample', and '--seed' arguments"
 
 nest = nestly.Nest()
 w = nestly_scons.SConsWrap(nest, options['outdir_base'], alias_environment=env)
@@ -258,10 +281,10 @@ if options["simulate_data"]:
         return [{'id': i} for i in range(options['nsims'])]
 
     @w.add_target()
-    def input_data(outdir, c):
+    def input_seqs(outdir, c):
         sim_setting = c['simulation_setting']
-        outbase = path.join(outdir, "gc_sim")
-        sim_data = env.Command(
+        outbase = path.join(outdir, "sim_seqs")
+        sim_seqs = env.Command(
             outbase + ".fasta",
             [sim_setting[x] for x in ['mutability_file', 'substitution_file', 'random_seq_file']],
             "xvfb-run -a lib/bcr-phylo-benchmark/bin/simulator.py --verbose" \
@@ -277,17 +300,29 @@ if options["simulate_data"]:
                     +  " --target_count " + str(sim_setting['target_count']) \
                     +  " --carry_cap " + str(sim_setting['carry_cap']) \
                     +  " --skip_update " + str(sim_setting['skip_update']) \
-                    +  " --random_seed " + str(c['simulation']['id']) \
                     + (" --selection" if sim_setting['selection'] else "") \
-                    #+  " --random_seed " + str(c['simulation']['id']) \
+                    +  " --random_seed " + str(c['simulation']['id']) \
                     +  " > " + outbase + ".log")
-        env.Depends(sim_data, "lib/bcr-phylo-benchmark/bin/simulator.py")
-        return sim_data
+        env.Depends(sim_seqs, "lib/bcr-phylo-benchmark/bin/simulator.py")
+        return sim_seqs
 
-#elif options["cft_data"]:
-#python/parse_partis_data.py ${DATA_DIR} --sample ${SAMPLE} --seed ${SEED} --output-dir ${OUTPUT_DIR}
-    
-    
+elif options["cft_data"]:
+
+    @w.add_target()
+    def input_seqs(outdir, c):
+        outbase = path.join(outdir, "cluster_seqs")
+        cluster_seqs = env.Command(
+            outbase + ".fasta",
+            path.join(options["data_dir"], "info.yaml"),
+            "python/parse_partis_data.py " + options["data_dir"] \
+                    + " --sample " + options["sample"] \
+                    + " --seed " + options["seed"] \
+                    + " --output-path " + outbase + ".fasta")
+        env.Depends(cluster_seqs, "python/parse_partis_data.py")
+        return cluster_seqs
+
+
+
 #@w.add_target()
 #def _simulation_posterior_seqs(outdir, c):
 #    return dict()
