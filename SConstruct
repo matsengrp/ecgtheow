@@ -281,11 +281,11 @@ if options["simulate_data"]:
         return [{'id': i} for i in range(options['nsims'])]
 
     @w.add_target()
-    def input_seqs(outdir, c):
+    def simulation_output(outdir, c):
         sim_setting = c['simulation_setting']
         outbase = path.join(outdir, "sim_seqs")
-        sim_seqs = env.Command(
-            outbase + ".fasta",
+        sim_outp = env.Command(
+            [outbase + x for x in ["_lineage_tree.p", ".fasta"]],
             [sim_setting[x] for x in ['mutability_file', 'substitution_file', 'random_seq_file']],
             "xvfb-run -a lib/bcr-phylo-benchmark/bin/simulator.py --verbose" \
                     +  " --mutability ${SOURCES[0]}" \
@@ -303,8 +303,25 @@ if options["simulate_data"]:
                     + (" --selection" if sim_setting['selection'] else "") \
                     +  " --random_seed " + str(c['simulation']['id']) \
                     +  " > " + outbase + ".log")
-        env.Depends(sim_seqs, "lib/bcr-phylo-benchmark/bin/simulator.py")
-        return sim_seqs
+        env.Depends(sim_outp, "lib/bcr-phylo-benchmark/bin/simulator.py")
+        return sim_outp
+
+    @w.add_target()
+    def simulation_tree(outdir, c):
+        return c["simulation_output"][0]
+
+    @w.add_target()
+    def input_seqs(outdir, c):
+        return c["simulation_output"][1]
+
+    @w.add_target()
+    def seed(outdir, c):
+        seed = env.Command(
+            path.join(outdir, "seed.txt"),
+            c["simulation_tree"],
+            "python/find_sim_seed.py $SOURCE $TARGET")
+        env.Depends(seed, "python/find_sim_seed.py")
+        return seed
 
 elif options["cft_data"]:
 
@@ -348,32 +365,6 @@ elif options["cft_data"]:
 # ---------------------------
 
 #software_versions.add_software_versions(w)
-#
-        
-#
-#
-#@w.add_target()
-#def _process_sim(outdir, c):
-#    return env.Command(
-#        [path.join(outdir, x) for x in ['sampled_seqs.fasta', 'seedid']],
-#        c['tree'],
-#        "python/process_sim.py $SOURCE $TARGETS")
-#
-#
-#@w.add_target()
-#def sampled_seqs(outdir, c):
-#    temp_fasta = path.join(outdir, "temp.fasta")
-#    return env.Command(
-#        path.join(outdir, 'trimmed_sampled_seqs.fasta'),
-#        c['_process_sim'][0],
-#        "awk \'/^[^>]/ {gsub(\"N\", \"-\", $0)} {print}\' < $SOURCE > " + temp_fasta + ";" + \
-#        "seqmagick mogrify --squeeze " + temp_fasta + ";" + \
-#        "awk \'/^[^>]/ {gsub(\"-\", \"N\", $0)} {print}\' < " + temp_fasta + " > $TARGET;" + \
-#        "rm " + temp_fasta + ";")
-#
-#@w.add_target()
-#def seed(outdir, c):
-#    return c['_process_sim'][1]
 #
 #
 #
