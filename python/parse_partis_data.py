@@ -17,8 +17,8 @@ if __name__ == '__main__':
         '--seed', type=str, required=True,
         help="The name of the seed sequence.")
     parser.add_argument(
-        '--output-dir', type=str, required=True,
-        help="The name of the output directory.")
+        '--output-path', type=str, required=True,
+        help="Path to output FASTA file.")
 
     args = parser.parse_args()
     args.data_dir = args.data_dir.rstrip("/")
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     os.system("lib/cft/bin/process_partis.py" +\
               " --cluster-annotation-file " + annotation_path +\
               " --partition-file " + partition_path +\
-              " --seqs-out " + args.output_dir + "/data/healthy_seqs.fasta" +\
+              " --seqs-out " + args.output_path +\
               " --parameter-dir " + param_dir +\
               " --locus " + locus +\
               " --remove-frameshifts --remove-stops" +\
