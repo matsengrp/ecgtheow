@@ -135,7 +135,7 @@ lib/cft/bin/prune.py --naive naive --seed ${SEED} ${OUTPUT_DIR}/data/healthy_seq
 seqmagick convert --include-from-file ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.ids ${OUTPUT_DIR}/data/healthy_seqs.fasta ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta
 
 # Output the FastTree .PNG tree graphic highlighting the pruned nodes.
-python/annotate_fasttree_tree.py ${OUTPUT_DIR}/data/healthy_seqs.tre ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.ids --naive naive --seed ${SEED}
+python/annotate_fasttree_tree.py ${OUTPUT_DIR}/data/healthy_seqs.tre ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.ids --naive naive --seed ${SEED} --output-path ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.ids.tre.png
 
 # Trim off site columns with full N-padding.
 awk '/^[^>]/ {gsub("N", "-", $0)} {print}' < ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta > ${OUTPUT_DIR}/data/temp.fasta

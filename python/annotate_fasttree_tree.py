@@ -19,6 +19,9 @@ if __name__ == '__main__':
     parser.add_argument(
         '--seed', type=str, required=True,
         help="The name of the seed sequence.")
+    parser.add_argument(
+        '--output-path', type=str, required=True,
+        help="The PNG output file path.")
 
     args = parser.parse_args()
 
@@ -45,4 +48,4 @@ if __name__ == '__main__':
     ts.show_leaf_name = False
     ts.show_scale = False
 
-    tree.render(args.ids_path + ".tre.png", tree_style=ts)
+    tree.render(args.output_path, tree_style=ts)
