@@ -149,6 +149,32 @@ Script.AddOption("--seed",
         default=None,
         help="What seed should we use? - CFT")
 
+Script.AddOption('--nprune',
+        dest="nprune",
+        type='str',
+        default="100",
+        help='How many sequences should we keep from the clonal family? - CFT')
+
+# BEAST/RevBayes inference arguments
+
+Script.AddOption("--run-beast",
+        dest="run_beast",
+        action="store_true",
+        default=False,
+        help="Should we run BEAST inference?")
+
+Script.AddOption("--run-revbayes",
+        dest="run_revbayes",
+        action="store_true",
+        default=False,
+        help="Should we run RevBayes inference?")
+
+Script.AddOption("--naive-correction",
+        dest="naive_correction",
+        action="store_true",
+        default=False,
+        help="Should we run naive corrected (in addition to regular) Bayesian inference?")
+
 
 
 
@@ -194,6 +220,12 @@ def get_options(env):
         data_dir = env.GetOption("data_dir"),
         sample = env.GetOption("sample"),
         seed = env.GetOption("seed"),
+        nprune = [int(x) for x in env.GetOption("nprune").split(",")],
+
+        # BEAST/RevBayes inference arguments
+        run_beast = env.GetOption("run_beast"),
+        run_revbayes = env.GetOption("run_revbayes"),
+        naive_correction = env.GetOption("naive_correction"),
 
         test_run = env.GetOption('test_run'),
         always_build_metadata = not env.GetOption('lazy_metadata'),
@@ -295,7 +327,7 @@ if options["simulate_data"]:
                     +  " --lambda " + str(sim_setting['lambda']) \
                     +  " --lambda0 " + str(sim_setting['lambda0']) \
                     +  " --T " + str(sim_setting['T']) \
-                    + (" --n " + str(sim_setting['n']) if sim_setting['n'] else "") \
+                    + (" --n " + str(sim_setting['n']) if sim_setting['n'] is not None else "") \
                     +  " --target_dist " + str(sim_setting['target_dist']) \
                     +  " --target_count " + str(sim_setting['target_count']) \
                     +  " --carry_cap " + str(sim_setting['carry_cap']) \
@@ -338,14 +370,81 @@ elif options["cft_data"]:
         return cluster_seqs
 
     @w.add_target()
+    def cluster_fasttree(outdir, c):
+        cluster_fasttree = env.Command(
+            path.join(outdir, "cluster_fasttree.tree"),
+            c["cluster_seqs"],
+            "/home/matsengrp/local/bin/FastTree -nt $SOURCE > $TARGET")
+        env.Depends(cluster_fasttree, "/home/matsengrp/local/bin/FastTree")
+        return cluster_fasttree
+
+    @w.add_target()
+    def seed(outdir, c):
+        return env.Command(
+            path.join(outdir, "seed.txt"),
+            None,
+            "echo " + options["seed"] + " > $TARGET")
+
+    @w.add_nest()
+    def nprune(c):
+        return [{"id": "nprune" + str(nprune),
+                 "value": nprune}
+                for nprune in options["nprune"]]
+
+    @w.add_target()
+    def pruned_cluster_seqids(outdir, c):
+        pruned_cluster_seqids = env.Command(
+            path.join(outdir, "pruned_cluster_seqids.txt"),
+            c["cluster_fasttree"],
+            "lib/cft/bin/prune.py --naive naive --seed " + options["seed"] + " $SOURCE -n " + str(c["nprune"]["value"]) + " --strategy seed_lineage $TARGET")
+        env.Depends(pruned_cluster_seqids, "lib/cft/bin/prune.py")
+        return pruned_cluster_seqids
+
+    @w.add_target()
+    def pruned_cluster_seqs(outdir, c):
+        return env.Command(
+            path.join(outdir, "pruned_cluster_seqs.fasta"),
+            [c["pruned_cluster_seqids"], c["cluster_seqs"]],
+            "seqmagick convert --include-from-file $SOURCES $TARGET")
+
+    @w.add_target()
     def input_seqs(outdir, c):
         return env.Command(
-            path.join(outdir, "trimmed_cluster_seqs.fasta"),
-            c["cluster_seqs"],
+            path.join(outdir, "input_seqs.fasta"),
+            c["pruned_cluster_seqs"],
             "awk \'/^[^>]/ {gsub(\"N\", \"-\", $0)} {print}\' < $SOURCE > temp.fasta;" + \
             "seqmagick mogrify --squeeze temp.fasta;" + \
             "awk \'/^[^>]/ {gsub(\"-\", \"N\", $0)} {print}\' < temp.fasta > $TARGET;" + \
             "rm temp.fasta")
+
+    @w.add_target()
+    def pruned_cluster_fasttree_png(outdir, c):
+        pruned_cluster_fasttree_png = env.Command(
+            path.join(outdir, "pruned_cluster_fasttree.png"),
+            [c["cluster_fasttree"], c["pruned_cluster_seqids"]],
+            "python/annotate_fasttree_tree.py $SOURCES --naive naive --seed " + options["seed"] + " --output-path $TARGET")
+        env.Depends(pruned_cluster_fasttree_png, "python/annotate_fasttree_tree.py")
+        return pruned_cluster_fasttree_png
+
+
+
+
+
+###### STEP 2: Perform BEAST/RevBayes inference
+
+@w.add_nest(full_dump=True)
+def program(c):
+    return [{'id': name + ("-naive-corrected" if naive_correction else ""),
+             'name': name,
+             'naive_correction': naive_correction}
+            for program_name in ["beast", "revbayes"] if options["run_" + program_name]
+            for naive_correction in {options["naive_correction"], False}]
+
+#@w.add_target()
+#def input_script(outdir, c):
+    
+
+
 
 
 
@@ -357,22 +456,6 @@ elif options["cft_data"]:
 #    return dict()
 # Need to add this to our tripl nestly wrapper
 #w.add_aggregate('simulation_posterior_seqs', dict)
-
-# Recording software versions
-# ---------------------------
-
-#software_versions.add_software_versions(w)
-#
-#
-#
-#@w.add_nest(full_dump=True)
-#def method(c):
-#    return [{'id': method + ("-naive-corrected" if naive_correction else ''),
-#             'tool': method,
-#             'naive_correction': naive_correction}
-#            for method in ['revbayes', 'beast']
-#            for naive_correction in [True, False]]
-#
 #
 ##python/generate_beast_xml_input.py --naive naive --seed ${SEED} templates/beast_template.xml data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta --iter ${MCMC_ITER} --thin ${MCMC_THIN}
 #@w.add_target()
