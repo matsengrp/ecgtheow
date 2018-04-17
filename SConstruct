@@ -273,9 +273,9 @@ def posterior(outdir, c):
             'lib/revbayes/projects/cmake/rb $SOURCE > ' + path.join(outdir, 'revbayesrun.stdout.log'))
         env.Depends(rb_tgt, c['sampled_seqs'])
         tgt = env.Command(
-            path.join(outdir, 'lineage_reconstruction_beast.trees'),
+            path.join(outdir, 'lineage_reconstruction.beast.trees'),
             [path.join(outdir, x) for x in ['lineage_reconstruction.trees', 'lineage_reconstruction.ancestral_states.log']],
-            "python/revbayes_to_beast_trees.py $SOURCES --output-path " + path.join(outdir, 'lineage_reconstruction.trees'))
+            "python/revbayes_to_beast_trees.py $SOURCES --output-path $TARGET" )
         return tgt
             
 
