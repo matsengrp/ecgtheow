@@ -260,7 +260,8 @@ def posterior(outdir, c):
             " -Djava.library.path=/home/matsengrp/local/lib" + \
             " -Dbeast.plugins.dir=beast/plugins" + \
             " -jar /home/matsengrp/local/BEASTv1.8.4/lib/beast.jar" + \
-            " -warnings -seed 1 -overwrite $SOURCE")
+            " -warnings -seed 1 -overwrite $SOURCE" + \
+            " > " + path.join(outdir, "beastrun.stdout.log"))
     elif tool == 'revbayes':
         config_file = env.Command(
             path.join(outdir, 'lineage_reconstruction.rev'),
@@ -269,7 +270,7 @@ def posterior(outdir, c):
         rb_tgt = env.SRun(
             path.join(outdir, 'lineage_reconstruction.trees'),
             config_file,
-            'lib/revbayes/projects/cmake/rb $SOURCE')
+            'lib/revbayes/projects/cmake/rb $SOURCE > ' + path.join(outdir, 'revbayesrun.stdout.log'))
         env.Depends(rb_tgt, c['sampled_seqs'])
         tgt = env.Command(
             path.join(outdir, 'lineage_reconstruction_beast.trees'),
