@@ -273,13 +273,13 @@ def posterior(outdir, c):
             ['templates/rb_template.rev', c['sampled_seqs']],
             'python/generate_rb_rev_input.py --rev-path $TARGET ' + base_opts)
         rb_tgt = env.SRun(
-            path.join(outdir, 'lineage_reconstruction.trees'),
+            [path.join(outdir, x) for x in ['lineage_reconstruction.trees', 'lineage_reconstruction.ancestral_states.log']],
             config_file,
             'lib/revbayes/projects/cmake/rb $SOURCE > ' + path.join(outdir, 'revbayesrun.stdout.log'))
         env.Depends(rb_tgt, c['sampled_seqs'])
         tgt = env.Command(
             path.join(outdir, 'lineage_reconstruction.beast.trees'),
-            [path.join(outdir, x) for x in ['lineage_reconstruction.trees', 'lineage_reconstruction.ancestral_states.log']],
+            rb_tgt,
             "python/revbayes_to_beast_trees.py $SOURCES --output-path $TARGET" )
         return tgt
             
