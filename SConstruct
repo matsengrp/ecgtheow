@@ -327,28 +327,25 @@ elif options["cft_data"]:
 
     @w.add_target()
     def cluster_seqs(outdir, c):
-        outbase = path.join(outdir, "cluster_seqs")
         cluster_seqs = env.Command(
-            outbase + ".fasta",
+            path.join(outdir, "cluster_seqs.fasta"),
             path.join(options["data_dir"], "info.yaml"),
             "python/parse_partis_data.py " + options["data_dir"] \
                     + " --sample " + options["sample"] \
                     + " --seed " + options["seed"] \
-                    + " --output-path " + outbase + ".fasta")
+                    + " --output-path $TARGET")
         env.Depends(cluster_seqs, "python/parse_partis_data.py")
         return cluster_seqs
 
     @w.add_target()
     def input_seqs(outdir, c):
-        outbase = path.join(outdir, "trimmed_cluster_seqs")
-        trimmed_cluster_seqs = env.Command(
-            outbase + ".fasta",
+        return env.Command(
+            path.join(outdir, "trimmed_cluster_seqs.fasta"),
             c["cluster_seqs"],
             "awk \'/^[^>]/ {gsub(\"N\", \"-\", $0)} {print}\' < $SOURCE > temp.fasta;" + \
             "seqmagick mogrify --squeeze temp.fasta;" + \
             "awk \'/^[^>]/ {gsub(\"-\", \"N\", $0)} {print}\' < temp.fasta > $TARGET;" + \
-            "rm temp.fasta;")
-        return trimmed_cluster_seqs
+            "rm temp.fasta")
 
 
 
