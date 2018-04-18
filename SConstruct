@@ -382,6 +382,7 @@ elif options["cft_data"]:
                     + " --seed " + options["seed"] \
                     + " --output-path $TARGET")
         env.Depends(cluster_seqs, "python/parse_partis_data.py")
+        env.Depends(cluster_seqs, "lib/cft/bin/process_partis.py")
         return cluster_seqs
 
     @w.add_target()
@@ -450,41 +451,16 @@ elif options["cft_data"]:
 @w.add_nest(full_dump=True)
 def inference_setting(c):
     return [{'id': program_name + ("-naive-corrected" if naive_correction else "") + \
-                   "_iter" + str(100 * mcmc_iter if program_name == "beast" else mcmc_iter) + \
-                   "_thin" + str(100 * mcmc_thin if program_name == "beast" else mcmc_thin),
+                   "_iter" + str(mcmc_iter * (100 if program_name == "beast" else 1)) + \
+                   "_thin" + str(mcmc_thin * (100 if program_name == "beast" else 1)),
              'program_name': program_name,
              'naive_correction': naive_correction,
-             'mcmc_iter': 100 * mcmc_iter if program_name == "beast" else mcmc_iter,
-             'mcmc_thin': 100 * mcmc_thin if program_name == "beast" else mcmc_thin}
+             'mcmc_iter': mcmc_iter * (100 if program_name == "beast" else 1),
+             'mcmc_thin': mcmc_thin * (100 if program_name == "beast" else 1)}
             for program_name in ["beast", "revbayes"] if options["run_" + program_name]
             for naive_correction in {options["naive_correction"], False}
             for mcmc_iter in options["mcmc_iter"]
             for mcmc_thin in options["mcmc_thin"]]
-
-@w.add_target()
-def input_script(outdir, c):
-    inf_setting = c["inference_setting"]
-
-    if inf_setting["program_name"] == "beast":
-        scripter = "python/generate_beast_xml_input.py"
-        template = "templates/beast_template.xml"
-        outpath = path.join(outdir, "input_script.xml")
-        iter = 100 * inf_setting["mcmc_iter"]
-        thin = 100 * inf_setting["mcmc_thin"]
-    elif inf_setting["program_name"] == "revbayes":
-        scripter = "python/generate_rb_rev_input.py"
-        template = "templates/rb_template.rev"
-        outpath = path.join(outdir, "input_script.rev")
-        iter = inf_setting["mcmc_iter"]
-        thin = inf_setting["mcmc_thin"]
-
-    return env.Command(outpath,
-        [scripter, template, c["input_seqs"]],
-        "$SOURCES --naive naive" + \
-        " --iter " + str(inf_setting["mcmc_iter"]) + \
-        " --thin " + str(inf_setting["mcmc_thin"]) + \
-       (" --naive-correction" if inf_setting["naive_correction"] else "") + \
-        " --output-path $TARGET")
 
 @w.add_target()
 def naive(outdir, c):
@@ -497,9 +473,71 @@ def naive(outdir, c):
                       not inf_setting["naive_correction"] else "naive") + \
         " > $TARGET")
 
+@w.add_target()
+def templater_output(outdir, c):
+    inf_setting = c["inference_setting"]
 
-#python/generate_beast_xml_input.py templates/beast_template.xml ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --iter ${MCMC_ITER} --thin ${MCMC_THIN} ${NAIVE_CORRECTION} --output-path ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_beast.xml
-#python/generate_rb_rev_input.py templates/rb_template.rev ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --iter ${MCMC_ITER} --thin ${MCMC_THIN} ${NAIVE_CORRECTION} --output-path ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb.rev
+    if inf_setting["program_name"] == "beast":
+        templater = "python/generate_beast_xml_input.py"
+        template = "templates/beast_template.xml"
+        outpath = [path.join(outdir, "beast_run.xml")]
+    elif inf_setting["program_name"] == "revbayes":
+        templater = "python/generate_rb_rev_input.py"
+        template = "templates/rb_template.rev"
+        outpath = [path.join(outdir, x) for x in ["revbayes_run.rev", "input_seqs_rb.fasta"]]
+
+    return env.Command(
+        outpath,
+        [templater, template, c["input_seqs"]],
+        "$SOURCES --naive naive" + \
+        " --iter " + str(inf_setting["mcmc_iter"]) + \
+        " --thin " + str(inf_setting["mcmc_thin"]) + \
+       (" --naive-correction" if inf_setting["naive_correction"] else "") + \
+        " --output-path ${TARGETS[0]}" + \
+       (" --output-fasta ${TARGETS[1]}" if inf_setting["program_name"] == "revbayes" else ""))
+
+@w.add_target()
+def input_script(outdir, c):
+    return c["templater_output"][0]
+
+@w.add_target()
+def inference_output(outdir, c):
+    inf_setting = c["inference_setting"]
+
+    if inf_setting["program_name"] == "beast":
+
+        stdout_path = path.join(outdir, "beast_run.stdout.log")
+        inf_target = env.SRun(
+            path.join(outdir, "beast_run.trees"),
+            c["input_script"],
+            "java -Xms64m -Xmx2048m" + \
+            " -Djava.library.path=/home/matsengrp/local/lib/" + \
+            " -Dbeast.plugins.dir=beast/plugins" + \
+            " -jar /home/matsengrp/local/BEASTv1.8.4/lib/beast.jar" + \
+            " -warnings -seed 1 -overwrite $SOURCE" + \
+            " > " + stdout_path)
+        env.Depends(inf_target, "/home/matsengrp/local/BEASTv1.8.4/lib/beast.jar")
+        return inf_target
+
+    elif inf_setting["program_name"] == "revbayes":
+
+        stdout_path = path.join(outdir, "revbayes_run.stdout.log")
+        inf_target = env.SRun(
+            [path.join(outdir, "revbayes_run" + x) for x in [".trees", ".ancestral_states.log"]],
+            c["input_script"],
+            "lib/revbayes/projects/cmake/rb $SOURCE" + \
+            " > " + stdout_path)
+        env.Depends(inf_target, "lib/revbayes/projects/cmake/rb")
+        postinf_target = env.Command(
+            path.join(outdir, "revbayes_run.beast.trees"),
+            inf_target,
+            "python/revbayes_to_beast_trees.py $SOURCES --output-path $TARGET")
+        env.Depends(postinf_target, "python/revbayes_to_beast_trees.py")
+        return postinf_target
+
+
+
+
 
 
 #@w.add_target()
@@ -511,47 +549,6 @@ def naive(outdir, c):
 # Need to add this to our tripl nestly wrapper
 #w.add_aggregate('simulation_posterior_seqs', dict)
 #
-##python/generate_beast_xml_input.py --naive naive --seed ${SEED} templates/beast_template.xml data/${SEED}.family_0.healthy.seedpruned.${NPRUNE}.fasta --iter ${MCMC_ITER} --thin ${MCMC_THIN}
-#@w.add_target()
-#def posterior(outdir, c):
-#    tool = c['method']['tool']
-#    naive_correction = c['method']['naive_correction']
-#    # Set mcmc iters based on whether or not its a test run
-#    base_opts = " $SOURCES --naive simcell_1" + (" --naive-correction" if naive_correction else '')
-#    if options['test_run']:
-#        base_opts += " --iter 10000 --thin 10"
-#    else:
-#        base_opts += " --iter 10000000 --thin 1000"
-#    if tool == 'beast':
-#        config_file = env.Command(
-#            path.join(outdir, "lineage_reconstruction.xml"),
-#            ["templates/beast_template.xml", c['sampled_seqs']],
-#            "python/generate_beast_xml_input.py --xml-path $TARGET " + base_opts)
-#        return env.SRun(
-#            path.join(outdir, "lineage_reconstruction.trees"),
-#            config_file,
-#            "java -Xms64m -Xmx2048m" + \
-#            # Need to abstract over this non-sense with env variables or something
-#            " -Djava.library.path=/home/matsengrp/local/lib" + \
-#            " -Dbeast.plugins.dir=beast/plugins" + \
-#            " -jar /home/matsengrp/local/BEASTv1.8.4/lib/beast.jar" + \
-#            " -warnings -seed 1 -overwrite $SOURCE")
-#    elif tool == 'revbayes':
-#        config_file = env.Command(
-#            path.join(outdir, 'lineage_reconstruction.rev'),
-#            ['templates/rb_template.rev', c['sampled_seqs']],
-#            'python/generate_rb_rev_input.py --rev-path $TARGET ' + base_opts)
-#        rb_tgt = env.SRun(
-#            path.join(outdir, 'lineage_reconstruction.trees'),
-#            config_file,
-#            'lib/revbayes/projects/cmake/rb $SOURCE')
-#        env.Depends(rb_tgt, c['sampled_seqs'])
-#        tgt = env.Command(
-#            path.join(outdir, 'lineage_reconstruction_beast.trees'),
-#            [path.join(outdir, x) for x in ['lineage_reconstruction.trees', 'lineage_reconstruction.ancestral_states.log']],
-#            "python/revbayes_to_beast_trees.py $SOURCES --output-path " + path.join(outdir, 'lineage_reconstruction.trees'))
-#        return tgt
-#            
 #
 #@w.add_target()
 #def ecgtheow_counted_ancestors(outdir, c):
