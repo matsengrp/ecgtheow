@@ -47,6 +47,7 @@ if __name__ == '__main__':
         del id_seq[args.naive]
         args.naive = naive_name
 
+    os.system("echo " + naive_name + " > naive.txt")
     args.fasta_path = output_base + ".fasta"
     write_to_fasta(id_seq, args.fasta_path)
 

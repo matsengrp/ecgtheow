@@ -38,6 +38,8 @@ if __name__ == '__main__':
 
     assert args.naive in id_seq, "Sequence %r not found in FASTA file." % args.naive
 
+    os.system("echo " + args.naive + " > naive.txt")
+
     temp_vars = dict(
         id_seq=id_seq,
         naive=args.naive,

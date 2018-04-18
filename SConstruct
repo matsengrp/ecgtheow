@@ -175,6 +175,19 @@ Script.AddOption("--naive-correction",
         default=False,
         help="Should we run naive corrected (in addition to regular) Bayesian inference?")
 
+Script.AddOption('--mcmc-iter',
+        dest="mcmc_iter",
+        type='str',
+        default="100000",
+        help='How many RevBayes MCMC iterations (or 100x BEAST iterations) should we use?')
+
+Script.AddOption('--mcmc-thin',
+        dest="mcmc_thin",
+        type='str',
+        default="10",
+        help='What RevBayes MCMC thinning frequency (or 100x BEAST thinning frequency) should we use?')
+
+
 
 
 
@@ -226,6 +239,8 @@ def get_options(env):
         run_beast = env.GetOption("run_beast"),
         run_revbayes = env.GetOption("run_revbayes"),
         naive_correction = env.GetOption("naive_correction"),
+        mcmc_iter = [int(x) for x in env.GetOption("mcmc_iter").split(",")],
+        mcmc_thin = [int(x) for x in env.GetOption("mcmc_thin").split(",")],
 
         test_run = env.GetOption('test_run'),
         always_build_metadata = not env.GetOption('lazy_metadata'),
@@ -433,19 +448,52 @@ elif options["cft_data"]:
 ###### STEP 2: Perform BEAST/RevBayes inference
 
 @w.add_nest(full_dump=True)
-def program(c):
-    return [{'id': name + ("-naive-corrected" if naive_correction else ""),
-             'name': name,
-             'naive_correction': naive_correction}
+def inference_setting(c):
+    return [{'id': program_name + ("-naive-corrected" if naive_correction else "") + \
+                   "_iter" + str(100 * mcmc_iter if program_name == "beast" else mcmc_iter) + \
+                   "_thin" + str(100 * mcmc_thin if program_name == "beast" else mcmc_thin),
+             'program_name': program_name,
+             'naive_correction': naive_correction,
+             'mcmc_iter': 100 * mcmc_iter if program_name == "beast" else mcmc_iter,
+             'mcmc_thin': 100 * mcmc_thin if program_name == "beast" else mcmc_thin}
             for program_name in ["beast", "revbayes"] if options["run_" + program_name]
-            for naive_correction in {options["naive_correction"], False}]
+            for naive_correction in {options["naive_correction"], False}
+            for mcmc_iter in options["mcmc_iter"]
+            for mcmc_thin in options["mcmc_thin"]]
 
-#@w.add_target()
-#def input_script(outdir, c):
-    
+@w.add_target()
+def input_script(outdir, c):
+    inf_setting = c["inference_setting"]
+
+    if inf_setting["program_name"] == "beast":
+        scripter = "python/generate_beast_xml_input.py"
+        template = "templates/beast_template.xml"
+        outpath = path.join(outdir, "input_script.xml")
+        iter = 100 * inf_setting["mcmc_iter"]
+        thin = 100 * inf_setting["mcmc_thin"]
+    elif inf_setting["program_name"] == "revbayes":
+        scripter = "python/generate_rb_rev_input.py"
+        template = "templates/rb_template.rev"
+        outpath = path.join(outdir, "input_script.rev")
+        iter = inf_setting["mcmc_iter"]
+        thin = inf_setting["mcmc_thin"]
+
+    return env.Command(outpath,
+        [scripter, template, c["input_seqs"]],
+        "$SOURCES --naive naive" + \
+        " --iter " + str(inf_setting["mcmc_iter"]) + \
+        " --thin " + str(inf_setting["mcmc_thin"]) + \
+       (" --naive-correction" if inf_setting["naive_correction"] else "") + \
+        " --output-path $TARGET")
+
+@w.add_target()
+def naive(outdir, c):
+    return path.join(outdir, "naive.txt")
 
 
 
+#python/generate_beast_xml_input.py templates/beast_template.xml ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --iter ${MCMC_ITER} --thin ${MCMC_THIN} ${NAIVE_CORRECTION} --output-path ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_beast.xml
+#python/generate_rb_rev_input.py templates/rb_template.rev ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --iter ${MCMC_ITER} --thin ${MCMC_THIN} ${NAIVE_CORRECTION} --output-path ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb.rev
 
 
 #@w.add_target()
