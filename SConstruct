@@ -488,8 +488,14 @@ def input_script(outdir, c):
 
 @w.add_target()
 def naive(outdir, c):
-    return path.join(outdir, "naive.txt")
-
+    inf_setting = c["inference_setting"]
+    return env.Command(
+        path.join(outdir, "naive.txt"),
+        None,
+        "echo " + \
+        ("_naive_" if inf_setting["program_name"] == "revbayes" and
+                      not inf_setting["naive_correction"] else "naive") + \
+        " > $TARGET")
 
 
 #python/generate_beast_xml_input.py templates/beast_template.xml ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --iter ${MCMC_ITER} --thin ${MCMC_THIN} ${NAIVE_CORRECTION} --output-path ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_beast.xml

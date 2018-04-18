@@ -3,7 +3,6 @@
 import argparse
 import jinja2
 import os
-import re
 
 from util_functions import parse_fasta_seqs, write_to_fasta
 
@@ -47,7 +46,6 @@ if __name__ == '__main__':
         del id_seq[args.naive]
         args.naive = naive_name
 
-    os.system("echo " + naive_name + " > naive.txt")
     args.fasta_path = output_base + ".fasta"
     write_to_fasta(id_seq, args.fasta_path)
 
