@@ -29,7 +29,10 @@ if __name__ == '__main__':
         help="Should we apply the naive sequence correction?")
     parser.add_argument(
         '--output-path', type=str, required=True,
-        help="The Rev output file path.")
+        help="The Rev output script file path.")
+    parser.add_argument(
+        '--output-fasta', type=str, required=True,
+        help="The Rev output FASTA file path.")
 
     args = parser.parse_args()
 
@@ -46,11 +49,10 @@ if __name__ == '__main__':
         del id_seq[args.naive]
         args.naive = naive_name
 
-    args.fasta_path = output_base + ".fasta"
-    write_to_fasta(id_seq, args.fasta_path)
+    write_to_fasta(id_seq, args.output_fasta)
 
     temp_vars = dict(
-        fasta_path=args.fasta_path,
+        fasta_path=args.output_fasta,
         naive=args.naive,
         iter=args.iter,
         thin=args.thin,
