@@ -325,7 +325,7 @@ if options["simulate_data"]:
 
     @w.add_nest()
     def simulation(c):
-        return [{'id': i} for i in range(options['nsims'])]
+        return [{'id': "sim" + str(i), "number": i} for i in range(options['nsims'])]
 
     @w.add_target()
     def simulation_output(outdir, c):
@@ -348,7 +348,7 @@ if options["simulate_data"]:
                     +  " --carry_cap " + str(sim_setting['carry_cap']) \
                     +  " --skip_update " + str(sim_setting['skip_update']) \
                     + (" --selection" if sim_setting['selection'] else "") \
-                    +  " --random_seed " + str(c['simulation']['id']) \
+                    +  " --random_seed " + str(c['simulation']['number']) \
                     +  " > " + outbase + ".log")
         env.Depends(sim_outp, "lib/bcr-phylo-benchmark/bin/simulator.py")
         return sim_outp
@@ -507,7 +507,7 @@ def inference_output(outdir, c):
     if inf_setting["program_name"] == "beast":
 
         stdout_path = path.join(outdir, "beast_run.stdout.log")
-        inf_target = env.SRun(
+        inf_target = env.Command(
             path.join(outdir, "beast_run.trees"),
             c["input_script"],
             "java -Xms64m -Xmx2048m" + \
@@ -522,7 +522,7 @@ def inference_output(outdir, c):
     elif inf_setting["program_name"] == "revbayes":
 
         stdout_path = path.join(outdir, "revbayes_run.stdout.log")
-        inf_target = env.SRun(
+        inf_target = env.Command(
             [path.join(outdir, "revbayes_run" + x) for x in [".trees", ".ancestral_states.log"]],
             c["input_script"],
             "lib/revbayes/projects/cmake/rb $SOURCE" + \

@@ -20,7 +20,7 @@ def main():
     tree = load_tree(args.simulated_tree_pickle)
     seed, _ = tree.get_farthest_leaf()
     with open(args.seedid_file, 'w') as fh:
-        fh.write(seed.name)
+        fh.write(seed.name + "\n")
 
 if __name__ == '__main__':
     main()
