@@ -187,6 +187,20 @@ Script.AddOption('--mcmc-thin',
         default="10",
         help='What RevBayes MCMC thinning frequency (or 100x BEAST thinning frequency) should we use?')
 
+# post-processing arguments
+
+Script.AddOption('--mcmc-burnin',
+        dest="mcmc_burnin",
+        type='str',
+        default="1000",
+        help='What amount of MCMC burnin should we use?')
+
+Script.AddOption('--asr-nfilters',
+        dest="asr_nfilters",
+        type='str',
+        default="500,1000",
+        help='Visualize (AA)-(AA) edges with at least this many samples.')
+
 
 
 
@@ -241,6 +255,10 @@ def get_options(env):
         naive_correction = env.GetOption("naive_correction"),
         mcmc_iter = [int(x) for x in env.GetOption("mcmc_iter").split(",")],
         mcmc_thin = [int(x) for x in env.GetOption("mcmc_thin").split(",")],
+
+        # post-processing arguments
+        mcmc_burnin = [int(x) for x in env.GetOption("mcmc_burnin").split(",")],
+        asr_nfilters = [int(x) for x in env.GetOption("asr_nfilters").split(",")],
 
         test_run = env.GetOption('test_run'),
         always_build_metadata = not env.GetOption('lazy_metadata'),
@@ -469,8 +487,8 @@ def naive(outdir, c):
         path.join(outdir, "naive.txt"),
         None,
         "echo " + \
-        ("_naive_" if inf_setting["program_name"] == "revbayes" and
-                      not inf_setting["naive_correction"] else "naive") + \
+       ("_naive_" if inf_setting["program_name"] == "revbayes" and
+                     not inf_setting["naive_correction"] else "naive") + \
         " > $TARGET")
 
 @w.add_target()
@@ -540,6 +558,47 @@ def inference_output(outdir, c):
 
 
 
+###### STEP 3: Process the ASR-annotated trees
+
+@w.add_nest(full_dump=True)
+def postprocess_setting(c):
+    return [{'id': "burnin" + str(mcmc_burnin) + "_nfilter" + str(asr_nfilter),
+             'burnin': mcmc_burnin,
+             'nfilter': asr_nfilter}
+            for mcmc_burnin in options["mcmc_burnin"]
+            for asr_nfilter in options["asr_nfilters"]]
+
+@w.add_target()
+def tabulate_counted_ancestors(outdir, c):
+    inf_setting = c["inference_setting"]
+    postpr_setting = c["postprocess_setting"]
+
+    if inf_setting["program_name"] == "beast":
+        outbase = path.join(outdir, "beast_run")
+    elif inf_setting["program_name"] == "revbayes":
+        c["input_seqs"] = c["templater_output"][1]
+        outbase = path.join(outdir, "revbayes_run")
+
+    counted_ancestors = env.Command(
+        [outbase + x for x in [".aa_lineage_seqs.fasta", ".aa_lineage_seqs.dnamap",
+                               ".aa_lineage_graph", ".aa_lineage_graph.dot",
+                               ".aa_lineage_graph.png"]],
+        [c["inference_output"], c["input_seqs"], c["naive"], c["seed"]],
+        "python/trees_to_counted_ancestors.py ${SOURCES[0]} ${SOURCES[1]}" + \
+        " --burnin " + str(postpr_setting["burnin"]) + \
+        " --naive `cat ${SOURCES[2]}`" + \
+        " --seed `cat ${SOURCES[3]}`" + \
+        " --nfilter " + str(postpr_setting["nfilter"]) + \
+        " --output-base " + outbase)
+    env.Depends(counted_ancestors, "python/trees_to_counted_ancestors.py")
+    return counted_ancestors
+
+
+
+
+
+
+
 #@w.add_target()
 #def _simulation_posterior_seqs(outdir, c):
 #    return dict()
@@ -549,14 +608,6 @@ def inference_output(outdir, c):
 # Need to add this to our tripl nestly wrapper
 #w.add_aggregate('simulation_posterior_seqs', dict)
 #
-#
-#@w.add_target()
-#def ecgtheow_counted_ancestors(outdir, c):
-#    return env.Command(
-#        path.join(outdir, 'ecgtheow_counted_ancestors.dnamap'),
-#        [c['seed'], c['posterior'], c['sampled_seqs']],
-#        'python/trees_to_counted_ancestors.py ${SOURCES[1]} ${SOURCES[2]} ' \
-#            + '--seed `cat $SOURCE` --naive simcell_1 --burnin 100 --filters 50')
 #
 #@w.add_target()
 #def _process_posterior(outdir, c):
