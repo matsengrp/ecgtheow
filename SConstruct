@@ -281,7 +281,12 @@ assert env.GetOption("help") or options["simulate_data"] or all(options[x] for x
     "Please specify the '--data-dir', '--sample', and '--seed' arguments"
 
 nest = nestly.Nest()
-w = nestly_scons.SConsWrap(nest, options['outdir_base'], alias_environment=env)
+
+outdir = options['outdir_base']
+if options['test_run']:
+    outdir = path.join(outdir, 'test-runs')
+
+w = nestly_scons.SConsWrap(nest, outdir, alias_environment=env)
 w = nestly_tripl.NestWrap(w,
         name='build',
         # Need to base hashing off of this for optimal incrementalization
