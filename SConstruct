@@ -285,7 +285,7 @@ w = nestly_scons.SConsWrap(nest, options['outdir_base'], alias_environment=env)
 w = nestly_tripl.NestWrap(w,
         name='build',
         # Need to base hashing off of this for optimal incrementalization
-        metadata={'id': ('test-' if options['test_run'] else '') + 'ecgtheow-build-' + build_time.replace(' ', '-'),
+        metadata={'id': 'ecgtheow-build-' + build_time.replace(' ', '-'),
                   'time': build_time,
                   'command': " ".join(sys.argv),
                   'workdir': os.getcwd(),

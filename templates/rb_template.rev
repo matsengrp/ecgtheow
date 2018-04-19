@@ -113,7 +113,7 @@ monitors[mni++] = mnJointConditionalAncestralState(tree=psi, ctmc=seq,
 
 # run the analysis
 mymcmc = mcmc(mymodel, monitors, moves, nruns=1)
-mymcmc.burnin({{ 0.05 * iter }}, {{ 0.5 * thin }})
+mymcmc.burnin(floor({{ 0.05 * iter }}), floor({{ 0.5 * thin }}))
 mymcmc.run({{ iter }})
 ######mymcmc.operatorSummary()
 
