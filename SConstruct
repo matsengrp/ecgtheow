@@ -412,7 +412,7 @@ elif options["cft_data"]:
             None,
             "echo " + options["seed"] + " > $TARGET")
 
-    @w.add_nest()
+    @w.add_nest(full_dump=True)
     def nprune(c):
         return [{"id": "nprune" + str(nprune),
                  "value": nprune}
@@ -459,7 +459,7 @@ elif options["cft_data"]:
 
 ###### STEP 2: Perform BEAST/RevBayes inference
 
-@w.add_nest(full_dump=True)
+@w.add_nest()
 def inference_setting(c):
     return [{'id': program_name + ("-naive-corrected" if naive_correction else "") + \
                    "_iter" + str(mcmc_iter * (100 if program_name == "beast" else 1)) + \
@@ -553,7 +553,7 @@ def inference_output(outdir, c):
 
 ###### STEP 3: Process the ASR-annotated trees
 
-@w.add_nest(full_dump=True)
+@w.add_nest()
 def postprocess_setting(c):
     return [{'id': "burnin" + str(mcmc_burnin) + "_nfilter" + str(asr_nfilter),
              'burnin': mcmc_burnin,
