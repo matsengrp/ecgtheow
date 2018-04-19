@@ -201,15 +201,7 @@ Script.AddOption('--asr-nfilters',
         default="500,1000",
         help='Visualize (AA)-(AA) edges with at least this many samples.')
 
-
-
-
-
-Script.AddOption('--test',
-        dest='test_run',
-        action='store_true',
-        default=False,
-        help="Setting this flag does a quick test run (low mcmc iter count and sample size)")
+# miscellaneous arguments
 
 Script.AddOption('--outdir',
         dest='outdir',
@@ -225,6 +217,7 @@ Script.AddOption('--lazy-metadata',
         files may not update properly if any of the SConstruct code changed. However, this can be useful for improving build
         time when debugging, or when only code in scripts has changed. If `--lazy-metadata` is used, it's best to run again
         before using any of the output metadata.json files.""")
+
 
 
 def get_options(env):
@@ -260,7 +253,7 @@ def get_options(env):
         mcmc_burnin = [int(x) for x in env.GetOption("mcmc_burnin").split(",")],
         asr_nfilters = [int(x) for x in env.GetOption("asr_nfilters").split(",")],
 
-        test_run = env.GetOption('test_run'),
+        # miscellaneous arguments
         always_build_metadata = not env.GetOption('lazy_metadata'),
         outdir_base = env.GetOption('outdir'))
 
@@ -572,12 +565,10 @@ def postprocess_setting(c):
 def tabulate_counted_ancestors(outdir, c):
     inf_setting = c["inference_setting"]
     postpr_setting = c["postprocess_setting"]
+    outbase = path.join(outdir, inf_setting["program_name"] + "_run")
 
-    if inf_setting["program_name"] == "beast":
-        outbase = path.join(outdir, "beast_run")
-    elif inf_setting["program_name"] == "revbayes":
+    if inf_setting["program_name"] == "revbayes":
         c["input_seqs"] = c["templater_output"][1]
-        outbase = path.join(outdir, "revbayes_run")
 
     counted_ancestors = env.Command(
         [outbase + x for x in [".aa_lineage_seqs.fasta", ".aa_lineage_seqs.dnamap",
@@ -592,6 +583,25 @@ def tabulate_counted_ancestors(outdir, c):
         " --output-base " + outbase)
     env.Depends(counted_ancestors, "python/trees_to_counted_ancestors.py")
     return counted_ancestors
+
+if options["simulate_data"]:
+
+    @w.add_target()
+    def validate_posterior(outdir, c):
+        inf_setting = c["inference_setting"]
+        postpr_setting = c["postprocess_setting"]
+        outbase = path.join(outdir, inf_setting["program_name"] + "_run")
+
+        posterior_outp = env.Command(
+            [outbase + x for x in ['_posterior_samples.csv', '_posterior_seqs.csv']],
+            [c['simulation_tree'], c['inference_output'], c['naive'], c['seed']],
+            "python/process_beast.py ${SOURCES[0]} ${SOURCES[1]}" + \
+            " --naive `cat ${SOURCES[2]}`" + \
+            " --seed `cat ${SOURCES[3]}`" + \
+            " --burnin " + str(postpr_setting["burnin"]) + \
+            " $TARGETS")
+        env.Depends(posterior_outp, "python/process_beast.py")
+        return posterior_outp
 
 
 
@@ -608,16 +618,6 @@ def tabulate_counted_ancestors(outdir, c):
 # Need to add this to our tripl nestly wrapper
 #w.add_aggregate('simulation_posterior_seqs', dict)
 #
-#
-#@w.add_target()
-#def _process_posterior(outdir, c):
-#    tgt = env.Command(
-#        [path.join(outdir, 'lineage_posterior.' + x) for x in ['posterior_samples.csv', 'posterior_seqs.csv']],
-#        [c['seed'], c['tree'], c['posterior'], c['sampled_seqs']],
-#        'python/process_beast.py ${SOURCES[1]} ${SOURCES[2]} ' \
-#            + '--seed `cat $SOURCE` --naive simcell_1 --burnin 100 $TARGETS')
-#    env.Depends(tgt, 'python/process_beast.py')
-#    return tgt
 #
 #@w.add_target()
 #def posterior_seqs(outdir, c):
