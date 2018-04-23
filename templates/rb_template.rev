@@ -103,9 +103,9 @@ monitors[mni++] = mnFile(psi, filename="{{ basename }}.trees",
                          printgen=printgen, separator=TAB)
 monitors[mni++] = mnModel(filename="{{ basename }}.log",
                           printgen=printgen, separator=TAB)
-#monitors[mni++] = mnAncestralState(tree=psi, ctmc=seq,
-#                                   filename="{{ basename }}.ancestral_states.log",
-#                                   type="DNA", printgen=printgen, separator=TAB)
+######monitors[mni++] = mnAncestralState(tree=psi, ctmc=seq,
+######                                   filename="{{ basename }}.ancestral_states.log",
+######                                   type="DNA", printgen=printgen, separator=TAB)
 monitors[mni++] = mnJointConditionalAncestralState(tree=psi, ctmc=seq,
                                                    filename="{{ basename }}.ancestral_states.log",
                                                    type="DNA", printgen=printgen, separator=TAB)
@@ -113,22 +113,22 @@ monitors[mni++] = mnJointConditionalAncestralState(tree=psi, ctmc=seq,
 
 # run the analysis
 mymcmc = mcmc(mymodel, monitors, moves, nruns=1)
-mymcmc.burnin({{ 0.05 * iter }}, 200)
+mymcmc.burnin(floor({{ 0.05 * iter }}), floor({{ 0.5 * thin }}))
 mymcmc.run({{ iter }})
-#mymcmc.operatorSummary()
+######mymcmc.operatorSummary()
 
 
-# summarize output
-#treetrace = readTreeTrace("output/primates_cytb_GTRGI.trees",
-#                          separator=TAB, burnin=0.25)
-#treetrace.summarize()
-#asrtrace = readAncestralStateTrace("output/primates_cytb_GTRGI.ancestral_states.log", separator=TAB)
-# and then get the MAP tree
-#map_tree = mapTree(treetrace,"output/primates_cytb_GTRGI_MAP.tre")
+###### summarize output
+######treetrace = readTreeTrace("output/primates_cytb_GTRGI.trees",
+######                          separator=TAB, burnin=0.25)
+######treetrace.summarize()
+######asrtrace = readAncestralStateTrace("output/primates_cytb_GTRGI.ancestral_states.log", separator=TAB)
+###### and then get the MAP tree
+######map_tree = mapTree(treetrace,"output/primates_cytb_GTRGI_MAP.tre")
 
 
-# ASR summary tree?
-#asr_tree = ancestralStateTree(map_tree,ancestral_state_trace_vector=asrtrace,tree_trace=treetrace,
-#                              "output/asr.tre",burnin=0)
+###### ASR summary tree?
+######asr_tree = ancestralStateTree(map_tree,ancestral_state_trace_vector=asrtrace,tree_trace=treetrace,
+######                              "output/asr.tre",burnin=0)
 
 quit()

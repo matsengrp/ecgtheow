@@ -60,8 +60,8 @@ do
       shift 2
       NARGS=$((NARGS-2))
       ;;
-    --asr-nfilters)
-      ASR_NFILTERS="$2"
+    --asr-nfilter)
+      ASR_NFILTER="$2"
       shift 2
       NARGS=$((NARGS-2))
       ;;
@@ -96,7 +96,7 @@ if [ -z "${NPRUNE}" ]; then NPRUNE=100; fi
 if [ -z "${MCMC_ITER}" ]; then MCMC_ITER=10000000; fi
 if [ -z "${MCMC_THIN}" ]; then MCMC_THIN=1000; fi
 if [ -z "${MCMC_BURNIN}" ]; then MCMC_BURNIN=1000; fi
-if [ -z "${ASR_NFILTERS}" ]; then ASR_NFILTERS="50,100"; fi
+if [ -z "${ASR_NFILTER}" ]; then ASR_NFILTER="100"; fi
 if [ -z "${OVERWRITE}" ]; then OVERWRITE=0; fi
 if [ -z "${RUN_BEAST}" ]; then RUN_BEAST=0; fi
 if [ -z "${RUN_REVBAYES}" ]; then RUN_REVBAYES=0; fi
@@ -127,7 +127,6 @@ mkdir -p ${OUTPUT_DIR}/data ${OUTPUT_DIR}/runs
 echo ${ARGS} > ${OUTPUT_DIR}/args.log
 
 # Parse the partis YAML info file and get the "healthy" sequences.
-export PARTIS=${PWD%/}/lib/cft/partis
 python/parse_partis_data.py ${DATA_DIR} --sample ${SAMPLE} --seed ${SEED} --output-path ${OUTPUT_DIR}/data/healthy_seqs.fasta
 
 # Generate a tree and prune sequences from the clonal family.
@@ -136,7 +135,7 @@ lib/cft/bin/prune.py --naive naive --seed ${SEED} ${OUTPUT_DIR}/data/healthy_seq
 seqmagick convert --include-from-file ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.ids ${OUTPUT_DIR}/data/healthy_seqs.fasta ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta
 
 # Output the FastTree .PNG tree graphic highlighting the pruned nodes.
-python/annotate_fasttree_tree.py ${OUTPUT_DIR}/data/healthy_seqs.tre ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.ids --naive naive --seed ${SEED}
+python/annotate_fasttree_tree.py ${OUTPUT_DIR}/data/healthy_seqs.tre ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.ids --naive naive --seed ${SEED} --output-path ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.ids.tre.png
 
 # Trim off site columns with full N-padding.
 awk '/^[^>]/ {gsub("N", "-", $0)} {print}' < ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta > ${OUTPUT_DIR}/data/temp.fasta
@@ -150,15 +149,15 @@ rm ${OUTPUT_DIR}/data/temp.fasta
 # 3) Summarize the results.
 if [ "${RUN_BEAST}" -eq 1 ]
 then
-  python/generate_beast_xml_input.py templates/beast_template.xml ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --iter ${MCMC_ITER} --thin ${MCMC_THIN} --output-dir ${OUTPUT_DIR} ${NAIVE_CORRECTION}
+  python/generate_beast_xml_input.py templates/beast_template.xml ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --iter ${MCMC_ITER} --thin ${MCMC_THIN} ${NAIVE_CORRECTION} --output-path ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_beast.xml
   java -Xms64m -Xmx2048m -Djava.library.path=${BEAGLE_DIR} -Dbeast.plugins.dir=beast/plugins -jar ${BEAST_DIR}/lib/beast.jar -warnings -seed 1 -overwrite ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_beast.xml
-  python/trees_to_counted_ancestors.py ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_beast.trees ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --seed ${SEED} --burnin ${MCMC_BURNIN} --filters ${ASR_NFILTERS//,/ }
+  python/trees_to_counted_ancestors.py ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_beast.trees ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --seed ${SEED} --burnin ${MCMC_BURNIN} --nfilter ${ASR_NFILTER} --output-base ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_beast
 fi
 
 if [ "${RUN_REVBAYES}" -eq 1 ]
 then
-  python/generate_rb_rev_input.py templates/rb_template.rev ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --iter ${MCMC_ITER} --thin ${MCMC_THIN} --output-dir ${OUTPUT_DIR} ${NAIVE_CORRECTION}
+  python/generate_rb_rev_input.py templates/rb_template.rev ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}.fasta --naive naive --iter ${MCMC_ITER} --thin ${MCMC_THIN} ${NAIVE_CORRECTION} --output-path ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb.rev --output-fasta ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}_rb.fasta
   lib/revbayes/projects/cmake/rb ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb.rev
-  python/revbayes_to_beast_trees.py ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb.trees ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb.ancestral_states.log
-  python/trees_to_counted_ancestors.py ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb_beast.trees ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}_rb.fasta --naive naive --seed ${SEED} --burnin ${MCMC_BURNIN} --filters ${ASR_NFILTERS//,/ }
+  python/revbayes_to_beast_trees.py ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb.trees ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb.ancestral_states.log --output-path ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb.beast.trees
+  python/trees_to_counted_ancestors.py ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb.beast.trees ${OUTPUT_DIR}/data/healthy_seqs_nprune${NPRUNE}_rb.fasta --naive naive --seed ${SEED} --burnin ${MCMC_BURNIN} --nfilter ${ASR_NFILTER} --output-base ${OUTPUT_DIR}/runs/healthy_seqs_nprune${NPRUNE}_rb.beast
 fi

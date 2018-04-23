@@ -3,7 +3,6 @@
 import argparse
 import jinja2
 import os
-import re
 
 from util_functions import parse_fasta_seqs
 
@@ -25,27 +24,16 @@ if __name__ == '__main__':
     parser.add_argument(
         '--thin', type=int, required=True,
         help="The MCMC sampling frequency.")
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
-        '--output-dir', type=str,
-        help="The name of the output directory.")
-    group.add_argument(
-        '--xml-path',
-        help="The XML output file path.")
     parser.add_argument(
-        '--naive-correction', action='store_true',
+        '--naive-correction', action='store_true', default=False,
         help="Should we apply the naive sequence correction?")
+    parser.add_argument(
+        '--output-path', type=str, required=True,
+        help="The XML output file path.")
 
     args = parser.parse_args()
 
-    args.fasta_path = args.fasta_path.lstrip("./")
-    if args.xml_path is not None:
-        xml_base = os.path.splitext(args.xml_path)[0]
-    else:
-        fasta_path = re.split("/", args.fasta_path)[-1]
-        xml_base = os.path.splitext(fasta_path)[0]
-        xml_base = args.output_dir + "/runs/" + xml_base + "_beast"
-
+    output_base = os.path.splitext(args.output_path)[0]
     id_seq = parse_fasta_seqs(args.fasta_path)
 
     assert args.naive in id_seq, "Sequence %r not found in FASTA file." % args.naive
@@ -55,7 +43,7 @@ if __name__ == '__main__':
         naive=args.naive,
         iter=args.iter,
         thin=args.thin,
-        basename=xml_base,
+        basename=output_base,
         naive_correction=args.naive_correction
     )
 
@@ -63,4 +51,4 @@ if __name__ == '__main__':
                              undefined=jinja2.StrictUndefined,
                              trim_blocks=True, lstrip_blocks=True)
 
-    env.get_template(args.template_path).stream(**temp_vars).dump(xml_base + ".xml")
+    env.get_template(args.template_path).stream(**temp_vars).dump(args.output_path)

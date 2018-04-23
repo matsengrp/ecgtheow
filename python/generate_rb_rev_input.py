@@ -3,7 +3,6 @@
 import argparse
 import jinja2
 import os
-import re
 
 from util_functions import parse_fasta_seqs, write_to_fasta
 
@@ -25,50 +24,43 @@ if __name__ == '__main__':
     parser.add_argument(
         '--thin', type=int, required=True,
         help="The MCMC sampling frequency.")
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument(
-        '--output-dir', type=str,
-        help="The name of the output directory.")
-    group.add_argument(
-        '--rev-path',
-        help="The Rev output file path.")
     parser.add_argument(
-        '--naive-correction', action='store_true',
+        '--naive-correction', action='store_true', default=False,
         help="Should we apply the naive sequence correction?")
+    parser.add_argument(
+        '--output-path', type=str, required=True,
+        help="The Rev output script file path.")
+    parser.add_argument(
+        '--output-fasta', type=str, required=True,
+        help="The Rev output FASTA file path.")
 
     args = parser.parse_args()
 
-    args.fasta_path = args.fasta_path.lstrip("./")
-    if args.rev_path is not None:
-        rev_base = os.path.splitext(args.rev_path)[0]
-    else:
-        fasta_path = re.split("/", args.fasta_path)[-1]
-        rev_base = os.path.splitext(fasta_path)[0]
-        rev_base = args.output_dir + "/runs/" + rev_base + "_rb"
-
+    output_base = os.path.splitext(args.output_path)[0]
     id_seq = parse_fasta_seqs(args.fasta_path)
 
     assert args.naive in id_seq, "Sequence %r not found in FASTA file." % args.naive
 
     # Do we need to apply the naive sequence correction?
     naive_name = "naive" if args.naive_correction else "_naive_"
-    id_seq[naive_name] = id_seq[args.naive]
+
     if naive_name != args.naive:
+        id_seq[naive_name] = id_seq[args.naive]
         del id_seq[args.naive]
-    args.naive = naive_name
-    args.fasta_path = os.path.splitext(args.fasta_path)[0] + "_rb.fasta"
-    write_to_fasta(id_seq, args.fasta_path)
+        args.naive = naive_name
+
+    write_to_fasta(id_seq, args.output_fasta)
 
     temp_vars = dict(
-        fasta_path=args.fasta_path,
+        fasta_path=args.output_fasta,
         naive=args.naive,
         iter=args.iter,
         thin=args.thin,
-        basename=rev_base
+        basename=output_base
     )
 
     env = jinja2.Environment(loader = jinja2.FileSystemLoader('.'),
                              undefined=jinja2.StrictUndefined,
                              trim_blocks=True, lstrip_blocks=True)
 
-    env.get_template(args.template_path).stream(**temp_vars).dump(rev_base + ".rev")
+    env.get_template(args.template_path).stream(**temp_vars).dump(args.output_path)
