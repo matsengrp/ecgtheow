@@ -564,108 +564,110 @@ def inference_output(outdir, c):
 
 ###### STEP 3: Process the ASR-annotated trees
 
-@w.add_nest()
-def burnin(c):
-    return [{'id': "burnin" + str(mcmc_burnin),
-             'value': mcmc_burnin}
-            for mcmc_burnin in options["mcmc_burnin"]]
+if options["run_beast"] or options["run_revbayes"]:
 
-if options["simulate_data"]:
+    @w.add_nest()
+    def burnin(c):
+        return [{'id': "burnin" + str(mcmc_burnin),
+                 'value': mcmc_burnin}
+                for mcmc_burnin in options["mcmc_burnin"]]
+
+    if options["simulate_data"]:
+
+        @w.add_target()
+        def posterior_validation(outdir, c):
+            inf_setting = c["inference_setting"]
+            outbase = path.join(outdir, inf_setting["program_name"] + "_run")
+            posterior_outp = env.Command(
+                [outbase + x for x in ['_posterior_samples.csv', '_posterior_seqs.csv']],
+                [c['simulation_tree'], c['inference_output'], c['naive'], c['seed']],
+                "python/process_beast.py ${SOURCES[0]} ${SOURCES[1]}" + \
+                " --naive `cat ${SOURCES[2]}`" + \
+                " --seed `cat ${SOURCES[3]}`" + \
+                " --burnin " + str(c["burnin"]["value"]) + \
+                " $TARGETS")
+            env.Depends(posterior_outp, "python/process_beast.py")
+            return posterior_outp
+
+        @w.add_target()
+        def posterior_samples(outdir, c):
+            tgt = c['posterior_validation'][0]
+            c['simulation_posterior_samples'][
+                c["simulation"]["id"] + "_" + c["inference_setting"]["id"] + "_" + c["burnin"]["id"]
+            ] = tgt
+            return tgt
+
+        @w.add_target()
+        def posterior_seqs(outdir, c):
+            tgt = c['posterior_validation'][1]
+            c['simulation_posterior_seqs'][
+                c["simulation"]["id"] + "_" + c["inference_setting"]["id"] + "_" + c["burnin"]["id"]
+            ] = tgt
+            return tgt
+
+    @w.add_nest()
+    def asr_nfilter(c):
+        return [{'id': "nfilter" + str(asr_nfilter),
+                 'value': asr_nfilter}
+                for asr_nfilter in options["asr_nfilters"]]
 
     @w.add_target()
-    def posterior_validation(outdir, c):
+    def tabulate_counted_ancestors(outdir, c):
         inf_setting = c["inference_setting"]
         outbase = path.join(outdir, inf_setting["program_name"] + "_run")
-        posterior_outp = env.Command(
-            [outbase + x for x in ['_posterior_samples.csv', '_posterior_seqs.csv']],
-            [c['simulation_tree'], c['inference_output'], c['naive'], c['seed']],
-            "python/process_beast.py ${SOURCES[0]} ${SOURCES[1]}" + \
+
+        if inf_setting["program_name"] == "revbayes":
+            c["input_seqs"] = c["templater_output"][1]
+
+        counted_ancestors = env.Command(
+            [outbase + x for x in [".aa_lineage_seqs.fasta", ".aa_lineage_seqs.dnamap",
+                                   ".aa_lineage_graph", ".aa_lineage_graph.dot",
+                                   ".aa_lineage_graph.png"]],
+            [c["inference_output"], c["input_seqs"], c["naive"], c["seed"]],
+            "python/trees_to_counted_ancestors.py ${SOURCES[0]} ${SOURCES[1]}" + \
+            " --burnin " + str(c["burnin"]["value"]) + \
             " --naive `cat ${SOURCES[2]}`" + \
             " --seed `cat ${SOURCES[3]}`" + \
-            " --burnin " + str(c["burnin"]["value"]) + \
-            " $TARGETS")
-        env.Depends(posterior_outp, "python/process_beast.py")
-        return posterior_outp
+            " --nfilter " + str(c["asr_nfilter"]["value"]) + \
+            " --output-base " + outbase)
+        env.Depends(counted_ancestors, "python/trees_to_counted_ancestors.py")
+        return counted_ancestors
 
-    @w.add_target()
-    def posterior_samples(outdir, c):
-        tgt = c['posterior_validation'][0]
-        c['simulation_posterior_samples'][
-            c["simulation"]["id"] + "_" + c["inference_setting"]["id"] + "_" + c["burnin"]["id"]
-        ] = tgt
-        return tgt
+    if options["simulate_data"]:
 
-    @w.add_target()
-    def posterior_seqs(outdir, c):
-        tgt = c['posterior_validation'][1]
-        c['simulation_posterior_seqs'][
-            c["simulation"]["id"] + "_" + c["inference_setting"]["id"] + "_" + c["burnin"]["id"]
-        ] = tgt
-        return tgt
+        w.pop("simulation")
 
-@w.add_nest()
-def asr_nfilter(c):
-    return [{'id': "nfilter" + str(asr_nfilter),
-             'value': asr_nfilter}
-            for asr_nfilter in options["asr_nfilters"]]
+        @w.add_target()
+        def combined_posterior_samples(outdir, c):
+            tree_files = c["simulation_posterior_samples"]
+            outpath = path.join(outdir, 'combined_posterior_samples.csv')
+            if len(tree_files) > 1:
+                return env.Command(
+                    outpath,
+                    tree_files.values(),
+                    'csvstack -n settingID -g {} $SOURCES > $TARGET'.format(','.join(tree_files.keys())))
+            else:
+                return env.Command(
+                    outpath,
+                    tree_files.values(),
+                    "cp $SOURCE $TARGET")
 
-@w.add_target()
-def tabulate_counted_ancestors(outdir, c):
-    inf_setting = c["inference_setting"]
-    outbase = path.join(outdir, inf_setting["program_name"] + "_run")
+        @w.add_target()
+        def combined_posterior_seqs(outdir, c):
+            seq_files = c["simulation_posterior_seqs"]
+            outpath = path.join(outdir, 'combined_posterior_seqs.csv')
+            if len(seq_files) > 1:
+                return env.Command(
+                    outpath,
+                    seq_files.values(),
+                    'csvstack -n settingID -g {} $SOURCES > $TARGET'.format(','.join(seq_files.keys())))
+            else:
+                return env.Command(
+                    outpath,
+                    seq_files.values(),
+                    "cp $SOURCE $TARGET")
 
-    if inf_setting["program_name"] == "revbayes":
-        c["input_seqs"] = c["templater_output"][1]
+    elif options["cft_data"]:
 
-    counted_ancestors = env.Command(
-        [outbase + x for x in [".aa_lineage_seqs.fasta", ".aa_lineage_seqs.dnamap",
-                               ".aa_lineage_graph", ".aa_lineage_graph.dot",
-                               ".aa_lineage_graph.png"]],
-        [c["inference_output"], c["input_seqs"], c["naive"], c["seed"]],
-        "python/trees_to_counted_ancestors.py ${SOURCES[0]} ${SOURCES[1]}" + \
-        " --burnin " + str(c["burnin"]["value"]) + \
-        " --naive `cat ${SOURCES[2]}`" + \
-        " --seed `cat ${SOURCES[3]}`" + \
-        " --nfilter " + str(c["asr_nfilter"]["value"]) + \
-        " --output-base " + outbase)
-    env.Depends(counted_ancestors, "python/trees_to_counted_ancestors.py")
-    return counted_ancestors
-
-if options["simulate_data"]:
-
-    w.pop("simulation")
-
-    @w.add_target()
-    def combined_posterior_samples(outdir, c):
-        tree_files = c["simulation_posterior_samples"]
-        outpath = path.join(outdir, 'combined_posterior_samples.csv')
-        if len(tree_files) > 1:
-            return env.Command(
-                outpath,
-                tree_files.values(),
-                'csvstack -n settingID -g {} $SOURCES > $TARGET'.format(','.join(tree_files.keys())))
-        else:
-            return env.Command(
-                outpath,
-                tree_files.values(),
-                "cp $SOURCE $TARGET")
-
-    @w.add_target()
-    def combined_posterior_seqs(outdir, c):
-        seq_files = c["simulation_posterior_seqs"]
-        outpath = path.join(outdir, 'combined_posterior_seqs.csv')
-        if len(seq_files) > 1:
-            return env.Command(
-                outpath,
-                seq_files.values(),
-                'csvstack -n settingID -g {} $SOURCES > $TARGET'.format(','.join(seq_files.keys())))
-        else:
-            return env.Command(
-                outpath,
-                seq_files.values(),
-                "cp $SOURCE $TARGET")
-
-elif options["cft_data"]:
-
-    w.pop("nprune")
+        w.pop("nprune")
 
