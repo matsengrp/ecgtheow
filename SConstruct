@@ -90,7 +90,7 @@ Script.AddOption('--T',
 Script.AddOption('--n',
         dest="n",
         type='int',
-        default=None,
+        default=30,
         help='How many GC cells are downsampled? - simulation')
 
 Script.AddOption('--target-dist',
