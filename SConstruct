@@ -84,13 +84,13 @@ Script.AddOption('--lambda0',
 Script.AddOption('--T',
         dest="T",
         type='str',
-        default="30",
+        default="15,30,45",
         help='GC sampling times - simulation')
 
 Script.AddOption('--n',
         dest="n",
         type='int',
-        default=None,
+        default=30,
         help='How many GC cells are downsampled? - simulation')
 
 Script.AddOption('--target-dist',
