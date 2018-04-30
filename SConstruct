@@ -89,8 +89,8 @@ Script.AddOption('--T',
 
 Script.AddOption('--n',
         dest="n",
-        type='int',
-        default=30,
+        type='str',
+        default="30,30,30",
         help='How many GC cells are downsampled? - simulation')
 
 Script.AddOption('--target-dist',
@@ -228,7 +228,7 @@ def get_options(env):
         lambda_ = [float(x) for x in env.GetOption("lambda").split(",")],
         lambda0 = [float(x) for x in env.GetOption("lambda0").split(",")],
         T = [int(x) for x in env.GetOption("T").split(",")],
-        n = env.GetOption("n"),
+        n = [int(x) for x in env.GetOption("n").split(",")],
         target_dist = [int(x) for x in env.GetOption("target_dist").split(",")],
         target_count = [int(x) for x in env.GetOption("target_count").split(",")],
         carry_cap = [int(x) for x in env.GetOption("carry_cap").split(",")],
@@ -321,7 +321,7 @@ if options["simulate_data"]:
             'lambda': lambda_,
             'lambda0': lambda0,
             'T': " ".join(str(T) for T in options["T"]),
-            'n': options["n"],
+            'n': " ".join(str(n) for n in options["n"]),
             'selection': True,
             'target_dist': target_dist,
             'target_count': target_count,
@@ -364,7 +364,7 @@ if options["simulate_data"]:
                     +  " --lambda " + str(sim_setting['lambda']) \
                     +  " --lambda0 " + str(sim_setting['lambda0']) \
                     +  " --T " + str(sim_setting['T']) \
-                    + (" --n " + str(sim_setting['n']) if sim_setting['n'] is not None else "") \
+                    +  " --n " + str(sim_setting['n']) \
                     +  " --target_dist " + str(sim_setting['target_dist']) \
                     +  " --target_count " + str(sim_setting['target_count']) \
                     +  " --carry_cap " + str(sim_setting['carry_cap']) \
