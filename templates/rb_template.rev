@@ -68,7 +68,7 @@ moves[mvi++] = mvSPR(topology, weight=1.0)
 
 # Branch length prior
 for (i in 1:n_branches) {
-    bl[i] ~ dnExponential(10.0)
+    bl[i] ~ dnExponential(100.0)
     moves[mvi++] = mvScaleBactrian(bl[i], weight=1.0)
 }
 
