@@ -21,11 +21,13 @@ if __name__ == '__main__':
     with open(args.tree_path) as fh:
         tree = pickle.load(fh)
 
-    list_of_dists = []
+    seq_names = []
+    root_to_tip_dists = []
 
-    for leaf_node in tree.get_leaves():
-        list_of_dists.append(leaf_node.get_distance(tree))
+    for leaf_node in tree.iter_leaves():
+        seq_names.append(leaf_node.name)
+        root_to_tip_dists.append(leaf_node.get_distance(tree))
 
     with open(args.output_path, "w") as f:
         wr = csv.writer(f)
-        wr.writerows([list_of_dists])
+        wr.writerows([seq_names, root_to_tip_dists])
