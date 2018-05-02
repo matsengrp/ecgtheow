@@ -155,7 +155,7 @@ if __name__ == '__main__':
         dot_copy = copy.deepcopy(dot)
 
         for ((a,b), count) in edge_c.most_common(None):
-            if a != b and count >= args.nfilter:
+            if a != b and count >= nfilter:
                 # Edge confidence measured by percentage of transitions from parent node (i.e. in [0,100]),
                 # which is then mapped to the interval [20,100] to avoid transparent edges.
                 # Node confidence is treated in a similar fashion below.
