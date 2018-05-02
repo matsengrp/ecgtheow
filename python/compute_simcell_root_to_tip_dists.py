@@ -26,7 +26,7 @@ if __name__ == '__main__':
 
     for leaf_node in tree.iter_leaves():
         seq_names.append(leaf_node.name)
-        root_to_tip_dists.append(leaf_node.get_distance(tree))
+        root_to_tip_dists.append(leaf_node.get_distance(tree) / len(tree.sequence))
 
     with open(args.output_path, "w") as f:
         wr = csv.writer(f)
