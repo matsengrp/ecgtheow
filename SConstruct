@@ -291,7 +291,7 @@ w = nestly_tripl.NestWrap(w,
                   'workdir': os.getcwd(),
                   'user': getpass.getuser(),
                   'commit': git('rev-parse', 'HEAD'),
-                  # putting this here these could eventually be nests, 
+                  # putting this here these could eventually be nests,
                   # This will be really cool :-)
                   'diff': git('diff'),
                   'status': git('status', '--porcelain')},
@@ -628,12 +628,6 @@ if options["run_beast"] or options["run_revbayes"]:
             ] = tgt
             return tgt
 
-    @w.add_nest()
-    def asr_nfilter(c):
-        return [{'id': "nfilter" + str(asr_nfilter),
-                 'value': asr_nfilter}
-                for asr_nfilter in options["asr_nfilters"]]
-
     @w.add_target()
     def tabulate_counted_ancestors(outdir, c):
         inf_setting = c["inference_setting"]
@@ -643,15 +637,16 @@ if options["run_beast"] or options["run_revbayes"]:
             c["input_seqs"] = c["templater_output"][1]
 
         counted_ancestors = env.Command(
-            [outbase + x for x in [".aa_lineage_seqs.fasta", ".aa_lineage_seqs.dnamap",
-                                   ".aa_lineage_graph", ".aa_lineage_graph.dot",
-                                   ".aa_lineage_graph.png"]],
+            [outbase + ".nfilter" + str(nfilter) + x for nfilter in options["asr_nfilters"]
+                         for x in [".aa_lineage_graph", ".aa_lineage_graph.dot",
+                                   ".aa_lineage_graph.png"]] + \
+            [outbase + x for x in [".aa_lineage_seqs.fasta", ".aa_lineage_seqs.dnamap"]],
             [c["inference_output"], c["input_seqs"], c["naive"], c["seed"]],
             "python/trees_to_counted_ancestors.py ${SOURCES[0]} ${SOURCES[1]}" + \
             " --burnin " + str(c["burnin"]["value"]) + \
             " --naive `cat ${SOURCES[2]}`" + \
             " --seed `cat ${SOURCES[3]}`" + \
-            " --nfilter " + str(c["asr_nfilter"]["value"]) + \
+            " --nfilters " + " ".join(str(nfilter) for nfilter in options["asr_nfilters"]) + \
             " --output-base " + outbase)
         env.Depends(counted_ancestors, "python/trees_to_counted_ancestors.py")
         return counted_ancestors
@@ -693,4 +688,3 @@ if options["run_beast"] or options["run_revbayes"]:
     elif options["cft_data"]:
 
         w.pop("nprune")
-
