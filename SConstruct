@@ -392,6 +392,15 @@ if options["simulate_data"]:
         env.Depends(seed, "python/find_sim_seed.py")
         return seed
 
+    @w.add_target()
+    def simcell_root_to_tip_dists_csv(outdir, c):
+        dists = env.Command(
+            path.join(outdir, "simcell_root_to_tip_dists.csv"),
+            c["simulation_tree"],
+            "python/compute_simcell_root_to_tip_dists.py $SOURCE --output-path $TARGET")
+        env.Depends(dists, "python/compute_simcell_root_to_tip_dists.py")
+        return dists
+
 elif options["cft_data"]:
 
     @w.add_target()
@@ -504,8 +513,8 @@ def templater_output(outdir, c):
         template = "templates/beast_template.xml"
         outpath = [path.join(outdir, "beast_run.xml")]
     elif inf_setting["program_name"] == "revbayes":
-        templater = "python/generate_rb_rev_input.py"
-        template = "templates/rb_template.rev"
+        templater = "python/generate_revbayes_rev_input.py"
+        template = "templates/revbayes_template.rev"
         outpath = [path.join(outdir, x) for x in ["revbayes_run.rev", "input_seqs_rb.fasta"]]
 
     return env.Command(
@@ -571,6 +580,19 @@ if options["run_beast"] or options["run_revbayes"]:
         return [{'id': "burnin" + str(mcmc_burnin),
                  'value': mcmc_burnin}
                 for mcmc_burnin in options["mcmc_burnin"]]
+
+    if options["run_revbayes"]:
+
+        @w.add_target()
+        def revbayes_root_to_tip_dists_csv(outdir, c):
+            dists = env.Command(
+                path.join(outdir, "revbayes_root_to_tip_dists.csv"),
+                c["inference_output"],
+                "python/compute_revbayes_root_to_tip_dists.py $SOURCE" + \
+                " --burnin " + str(c["burnin"]) + \
+                "--output-path $TARGET")
+            env.Depends(dists, "python/compute_revbayes_root_to_tip_dists.py")
+            return dists
 
     if options["simulate_data"]:
 
