@@ -590,7 +590,7 @@ if options["run_beast"] or options["run_revbayes"]:
                 c["inference_output"],
                 "python/compute_revbayes_root_to_tip_dists.py $SOURCE" + \
                 " --burnin " + str(c["burnin"]) + \
-                "--output-path $TARGET")
+                " --output-path $TARGET")
             env.Depends(dists, "python/compute_revbayes_root_to_tip_dists.py")
             return dists
 
