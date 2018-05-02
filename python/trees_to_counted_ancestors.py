@@ -60,9 +60,6 @@ if __name__ == '__main__':
         '--seed', required=True,
         help="The name of the seed sequence.")
     parser.add_argument(
-        '--nfilter', required=True, type=int,
-        help="Only display edges with at least this many samples.")
-    parser.add_argument(
         '--nfilters', nargs='+', required=True, type=int,
         help="Only display edges with at least this many samples.")
     parser.add_argument(
