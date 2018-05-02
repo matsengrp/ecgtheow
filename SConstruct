@@ -515,7 +515,7 @@ def templater_output(outdir, c):
     elif inf_setting["program_name"] == "revbayes":
         templater = "python/generate_revbayes_rev_input.py"
         template = "templates/revbayes_template.rev"
-        outpath = [path.join(outdir, x) for x in ["revbayes_run.rev", "input_seqs_rb.fasta"]]
+        outpath = [path.join(outdir, x) for x in ["revbayes_run.rev", "input_seqs_revbayes.fasta"]]
 
     return env.Command(
         outpath,
@@ -587,9 +587,10 @@ if options["run_beast"] or options["run_revbayes"]:
         def revbayes_root_to_tip_dists_csv(outdir, c):
             dists = env.Command(
                 path.join(outdir, "revbayes_root_to_tip_dists.csv"),
-                c["inference_output"],
-                "python/compute_revbayes_root_to_tip_dists.py $SOURCE" + \
-                " --burnin " + str(c["burnin"]) + \
+                [c["inference_output"], c["naive"]],
+                "python/compute_revbayes_root_to_tip_dists.py ${SOURCES[0]}" + \
+                " --burnin " + str(c["burnin"]["value"]) + \
+                " --naive `cat ${SOURCES[1]}`"
                 " --output-path $TARGET")
             env.Depends(dists, "python/compute_revbayes_root_to_tip_dists.py")
             return dists
