@@ -13,7 +13,7 @@ import dendropy
 import graphviz
 
 from tabulate_mutations import find_muts
-from util_functions import parse_fasta_seqs, translate, write_to_fasta
+from util_functions import parse_fasta_seqs, seqs_of_tree, translate, write_to_fasta
 
 
 def format_label(label):
@@ -25,21 +25,6 @@ def format_label(label):
         label.insert(i, "\n")
 
     return label
-
-
-def seqs_of_tree(t, seed):
-    '''
-    Iterate up the tree, getting ancestral sequences.
-    '''
-    lineage = [t.find_node_with_taxon_label(seed)]
-
-    while(True):
-        node = lineage[-1].parent_node
-        if node is None:
-            break  # We are done.
-        lineage.append(node)
-
-    return [n.annotations.get_value('ancestral') for n in lineage]
 
 
 if __name__ == '__main__':

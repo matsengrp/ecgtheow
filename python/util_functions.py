@@ -14,6 +14,20 @@ def parse_fasta_seqs(path, invert=False):
         for r in SeqIO.parse(path, "fasta")
     )
 
+def seqs_of_tree(t, seed):
+    '''
+    Iterate up the tree, getting ancestral sequences.
+    '''
+    lineage = [t.find_node_with_taxon_label(seed)]
+
+    while(True):
+        node = lineage[-1].parent_node
+        if node is None:
+            break  # We are done.
+        lineage.append(node)
+
+    return [n.annotations.get_value('ancestral') for n in lineage]
+
 def translate(s):
     '''
     Assume we are in frame and translate DNA to amino acids.
