@@ -178,7 +178,7 @@ Script.AddOption("--naive-correction",
 Script.AddOption('--mcmc-iter',
         dest="mcmc_iter",
         type='str',
-        default="10000",
+        default="100000",
         help='How many RevBayes MCMC iterations (or 100x BEAST iterations) should we use?')
 
 Script.AddOption('--mcmc-thin',
@@ -192,13 +192,13 @@ Script.AddOption('--mcmc-thin',
 Script.AddOption('--mcmc-burnin',
         dest="mcmc_burnin",
         type='str',
-        default="100",
+        default="1000",
         help='What amount of MCMC burnin should we use?')
 
 Script.AddOption('--asr-nfilters',
         dest="asr_nfilters",
         type='str',
-        default="50,100",
+        default="500,1000",
         help='Visualize (AA)-(AA) edges with at least this many samples.')
 
 # miscellaneous arguments
