@@ -178,7 +178,7 @@ Script.AddOption("--naive-correction",
 Script.AddOption('--mcmc-iter',
         dest="mcmc_iter",
         type='str',
-        default="100000",
+        default="10000",
         help='How many RevBayes MCMC iterations (or 100x BEAST iterations) should we use?')
 
 Script.AddOption('--mcmc-thin',
@@ -192,13 +192,13 @@ Script.AddOption('--mcmc-thin',
 Script.AddOption('--mcmc-burnin',
         dest="mcmc_burnin",
         type='str',
-        default="1000",
+        default="100",
         help='What amount of MCMC burnin should we use?')
 
 Script.AddOption('--asr-nfilters',
         dest="asr_nfilters",
         type='str',
-        default="500,1000",
+        default="50,100",
         help='Visualize (AA)-(AA) edges with at least this many samples.')
 
 # miscellaneous arguments
@@ -335,11 +335,11 @@ if options["simulate_data"]:
                   for skip_update in options["skip_update"]]
 
     @w.add_target()
-    def simulation_posterior_samples(outdir, c):
+    def simulation_asr_samples(outdir, c):
         return dict()
 
     @w.add_target()
-    def simulation_posterior_seqs(outdir, c):
+    def simulation_asr_aggregates(outdir, c):
         return dict()
 
     # Need to add this to our tripl nestly wrapper
@@ -581,53 +581,6 @@ if options["run_beast"] or options["run_revbayes"]:
                  'value': mcmc_burnin}
                 for mcmc_burnin in options["mcmc_burnin"]]
 
-    if options["run_revbayes"]:
-
-        @w.add_target()
-        def revbayes_root_to_tip_dists_csv(outdir, c):
-            dists = env.Command(
-                path.join(outdir, "revbayes_root_to_tip_dists.csv"),
-                [c["inference_output"], c["naive"]],
-                "python/compute_revbayes_root_to_tip_dists.py ${SOURCES[0]}" + \
-                " --burnin " + str(c["burnin"]["value"]) + \
-                " --naive `cat ${SOURCES[1]}`"
-                " --output-path $TARGET")
-            env.Depends(dists, "python/compute_revbayes_root_to_tip_dists.py")
-            return dists
-
-    if options["simulate_data"]:
-
-        @w.add_target()
-        def posterior_validation(outdir, c):
-            inf_setting = c["inference_setting"]
-            outbase = path.join(outdir, inf_setting["program_name"] + "_run")
-            posterior_outp = env.Command(
-                [outbase + x for x in ['_posterior_samples.csv', '_posterior_seqs.csv']],
-                [c['simulation_tree'], c['inference_output'], c['naive'], c['seed']],
-                "python/process_beast.py ${SOURCES[0]} ${SOURCES[1]}" + \
-                " --naive `cat ${SOURCES[2]}`" + \
-                " --seed `cat ${SOURCES[3]}`" + \
-                " --burnin " + str(c["burnin"]["value"]) + \
-                " $TARGETS")
-            env.Depends(posterior_outp, "python/process_beast.py")
-            return posterior_outp
-
-        @w.add_target()
-        def posterior_samples(outdir, c):
-            tgt = c['posterior_validation'][0]
-            c['simulation_posterior_samples'][
-                c["simulation"]["id"] + "_" + c["inference_setting"]["id"] + "_" + c["burnin"]["id"]
-            ] = tgt
-            return tgt
-
-        @w.add_target()
-        def posterior_seqs(outdir, c):
-            tgt = c['posterior_validation'][1]
-            c['simulation_posterior_seqs'][
-                c["simulation"]["id"] + "_" + c["inference_setting"]["id"] + "_" + c["burnin"]["id"]
-            ] = tgt
-            return tgt
-
     @w.add_target()
     def tabulate_counted_ancestors(outdir, c):
         inf_setting = c["inference_setting"]
@@ -651,14 +604,58 @@ if options["run_beast"] or options["run_revbayes"]:
         env.Depends(counted_ancestors, "python/trees_to_counted_ancestors.py")
         return counted_ancestors
 
+    if options["run_revbayes"]:
+
+        @w.add_target()
+        def revbayes_root_to_tip_dists_csv(outdir, c):
+            dists = env.Command(
+                path.join(outdir, "revbayes_root_to_tip_dists.csv"),
+                [c["inference_output"], c["naive"]],
+                "python/compute_revbayes_root_to_tip_dists.py ${SOURCES[0]}" + \
+                " --burnin " + str(c["burnin"]["value"]) + \
+                " --naive `cat ${SOURCES[1]}`"
+                " --output-path $TARGET")
+            env.Depends(dists, "python/compute_revbayes_root_to_tip_dists.py")
+            return dists
+
     if options["simulate_data"]:
+
+        @w.add_target()
+        def asr_validation(outdir, c):
+            inf_setting = c["inference_setting"]
+            outbase = path.join(outdir, inf_setting["program_name"] + "_run")
+            asr_validation = env.Command(
+                [outbase + x for x in ['_asr_samples.csv', '_asr_aggregates.csv']],
+                [c['simulation_tree'], c['inference_output'], c['seed']],
+                "python/validate_asr.py ${SOURCES[0]} ${SOURCES[1]}" + \
+                " --seed `cat ${SOURCES[2]}`" + \
+                " --burnin " + str(c["burnin"]["value"]) + \
+                " $TARGETS")
+            env.Depends(asr_validation, "python/validate_asr.py")
+            return asr_validation
+
+        @w.add_target()
+        def asr_samples(outdir, c):
+            tgt = c['asr_validation'][0]
+            c['simulation_asr_samples'][
+                c["simulation"]["id"] + "_" + c["inference_setting"]["id"] + "_" + c["burnin"]["id"]
+            ] = tgt
+            return tgt
+
+        @w.add_target()
+        def asr_aggregates(outdir, c):
+            tgt = c['asr_validation'][1]
+            c['simulation_asr_aggregates'][
+                c["simulation"]["id"] + "_" + c["inference_setting"]["id"] + "_" + c["burnin"]["id"]
+            ] = tgt
+            return tgt
 
         w.pop("simulation")
 
         @w.add_target()
-        def combined_posterior_samples(outdir, c):
-            tree_files = c["simulation_posterior_samples"]
-            outpath = path.join(outdir, 'combined_posterior_samples.csv')
+        def combined_asr_samples(outdir, c):
+            tree_files = c["simulation_asr_samples"]
+            outpath = path.join(outdir, 'combined_asr_samples.csv')
             if len(tree_files) > 1:
                 return env.Command(
                     outpath,
@@ -671,9 +668,9 @@ if options["run_beast"] or options["run_revbayes"]:
                     "cp $SOURCE $TARGET")
 
         @w.add_target()
-        def combined_posterior_seqs(outdir, c):
-            seq_files = c["simulation_posterior_seqs"]
-            outpath = path.join(outdir, 'combined_posterior_seqs.csv')
+        def combined_asr_aggregates(outdir, c):
+            seq_files = c["simulation_asr_aggregates"]
+            outpath = path.join(outdir, 'combined_asr_aggregates.csv')
             if len(seq_files) > 1:
                 return env.Command(
                     outpath,
