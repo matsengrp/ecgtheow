@@ -79,6 +79,11 @@ def asr_results(args, seq_type):
     for asr_sample in asr_samples:
         counter.update(asr_sample['asr_lineage_seqs'])
 
+    # add missed lineage sequences to the counter
+    for seq in true_lineage_seqs:
+        if not counter[seq]:
+            counter[seq] = 0
+
     # aggregate data per internal sequence observed in posterior
     asr_aggregates = [
         dict(seq_type=seq_type,
