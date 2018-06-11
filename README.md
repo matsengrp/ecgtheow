@@ -20,35 +20,27 @@ Then, create the ecgtheow conda environment and compile RevBayes by running `./I
 
 # Example usage
 
-The `run_ecgtheow.sh` shell script in the root directory executes the entire ancestral sequence reconstruction pipeline.  An example is given below:
+Running `scons` executes the entire ancestral sequence reconstruction pipeline.  An example is given below:
 
     source activate ecgtheow && cd ecgtheow
-    ./run_ecgtheow.sh --data-dir /fh/fast/matsen_e/processed-data/partis/qa255-synth/v17 --sample QA255-g-merged --seed QA255.105-Vh --beast-dir /home/matsengrp/local/BEASTv1.8.4/ --beagle-dir /home/matsengrp/local/lib/ --run-beast
+    scons --simulate-data --T=50,105,150 --n=5,90,5 --lambda=2 --lambda0=0.365 --target-dist=15 --target-count=30 --carry-cap=1000 --skip-update=100 --nsims=10 --run-beast --run-revbayes
 
-Remember that the conda environment must be activated before running the `run_ecgtheow.sh` script.
-The full set of command line arguments is described in the following table:
+Remember that the conda environment must be activated before running `scons`.
+The most important command line arguments are described in the following table:
 
 | Command | Description |
 | ---     | ---         |
-| `--data-dir` | The absolute path of the CFT dataset YAML file. |
-| `--sample` | The name of the sample. |
-| `--seed` | The name of the seed sequence. |
-| `--beast-dir` | The absolute path of the BEAST program. |
-| `--beagle-dir` | The absolute path of the BEAGLE libraries. |
-| `--nprune` | The number of sequences to keep from the CFT pruning step (defaults to 100). |
-| `--mcmc-iter` | The number of total MCMC iterations run in BEAST (defaults to 10000000). |
-| `--mcmc-thin` | The MCMC sampling frequency used in BEAST (defaults to 1000). |
-| `--mcmc-burnin` | The number of MCMC samples thrown away due to burn-in (defaults to 1000). |
+| `--simulate-data` | Should we generate GC-simulated data? |
+| `--nsims` | The number of GC simulation runs (defaults to 1). |
+| `--cft-data` | Should we use CFT data? |
+| `--data-dir` | For CFT, what data directory should we use? |
+| `--sample` | For CFT, what data sample should we use? |
+| `--seed` | For CFT, what seed should we use? |
+| `--run-beast` | Should we run BEAST inference? |
+| `--run-revbayes` | Should we run RevBayes inference? |
+| `--mcmc-iter` | How many RevBayes MCMC iterations (or 100x BEAST iterations) should we use (defaults to 100000)? |
+| `--mcmc-thin` | What RevBayes MCMC thinning frequency (or 100x BEAST thinning frequency) should we use (defaults to 10)? |
+| `--mcmc-burnin` | What amount of MCMC burnin should we use (defaults to 1000)? |
 | `--asr-nfilters` | The comma-separated list of thresholds used to filter out infrequent ancestral sequence transitions in the MCMC samples (defaults to 50,100). |
-| `--overwrite` | A binary flag that indicates whether to overwrite already existing results. |
-| `--run-beast` | A binary flag that indicates whether to run BEAST. |
-| `--run-revbayes` | A binary flag that indicates whether to run RevBayes. |
-| `--naive-correction` | Should we apply the naive sequence likelihood correction? |
 
-## X Servers & ETE3
-
-Note that ETE3 (as mentioned above) requires an active X-server connection.
-If the environment you're running from does not have one, you can simulate one by running with `xvfb-run`.
-Doing this for the example above would look like:
-
-    xvfb-run ./run_ecgtheow.sh --data-dir /fh/fast/matsen_e/processed-data/partis/qa255-synth/v17 --sample QA255-g-merged --seed QA255.105-Vh --beast-dir /home/matsengrp/local/BEASTv1.8.4/ --beagle-dir /home/matsengrp/local/lib/
+The entire set of command line arguments can be found by running `scons --help`.
