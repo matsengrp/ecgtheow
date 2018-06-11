@@ -23,7 +23,7 @@ Then, create the ecgtheow conda environment and compile RevBayes by running `./I
 Running `scons` executes the entire ancestral sequence reconstruction pipeline.  An example is given below:
 
     source activate ecgtheow && cd ecgtheow
-    scons --simulate-data --T=50,105,150 --n=5,90,5 --lambda=2 --lambda0=0.365 --target-dist=15 --target-count=30 --carry-cap=1000 --skip-update=100 --nsims=10 --run-beast --run-revbayes
+    scons --simulate-data --T=50,105,150 --n=5,90,5 --lambda=2 --lambda0=0.365 --target-dist=15 --target-count=30 --carry-cap=1000 --skip-update=100 --nsims=1 --run-beast --run-revbayes
 
 Remember that the conda environment must be activated before running `scons`.
 The most important command line arguments are described in the following table:
