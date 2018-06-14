@@ -8,7 +8,7 @@ mkdir -p $CONDA_PREFIX/etc/conda/deactivate.d
 printf '#!/bin/sh\n\nexport PYTHONNOUSERSITE=1' > $CONDA_PREFIX/etc/conda/activate.d/env_vars.sh
 printf '#!/bin/sh\n\nunset PYTHONNOUSERSITE' > $CONDA_PREFIX/etc/conda/deactivate.d/env_vars.sh
 
-conda install -y biopython csvkit==0.9.1 gcc graphviz jinja2 matplotlib pandas psutil python-graphviz pyyaml scons
+conda install -y biopython csvkit==0.9.1 graphviz jinja2 matplotlib pandas psutil python-graphviz pyyaml scons
 conda install -y -c bioconda colorbrewer dendropy seqmagick
 conda install -y -c conda-forge jellyfish
 conda install -y -c etetoolkit ete3
