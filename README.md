@@ -2,6 +2,8 @@
 
 Conda (Miniconda) package manager
 
+C/C++ compiler
+
 Java SE Runtime Environment (version 1.8.0.92 or above)
 
 BEAST (version 1.8.4 or above) (http://beast.community/)
