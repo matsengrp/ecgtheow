@@ -148,12 +148,10 @@ if __name__ == '__main__':
                 dot_copy.edge(seqs_out[a], seqs_out[b], xlabel=" ".join(format_label(find_muts(a, b))),
                               color="#0000ff" + (str(edge_conf) if edge_conf < 100 else ""), fontsize='11')
 
-                if seqs_out[a] != args.naive:
-                    child_conf = int(10 + (100-10) * float(node_c[a]) / num_trees)
-                    dot_copy.node(seqs_out[a], style="filled", fillcolor="#ff0000" + (str(child_conf) if child_conf < 100 else ""))
-                if seqs_out[b] != args.seed:
-                    child_conf = int(10 + (100-10) * float(node_c[b]) / num_trees)
-                    dot_copy.node(seqs_out[b], style="filled", fillcolor="#ff0000" + (str(child_conf) if child_conf < 100 else ""))
+                for ab in [a,b]:
+                    if seqs_out[ab] != args.naive and seqs_out[ab] != args.seed:
+                        node_conf = int(10 + (100-10) * float(node_c[ab]) / num_trees)
+                        dot_copy.node(seqs_out[ab], style="filled", fillcolor="#ff0000" + (str(node_conf) if node_conf < 100 else ""))
 
         dot_copy.save(args.output_base + '.nfilter' + str(nfilter) + '.aa_lineage_graph.dot')
         dot_copy.render(args.output_base + '.nfilter' + str(nfilter) + '.aa_lineage_graph')
