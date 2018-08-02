@@ -179,13 +179,13 @@ Script.AddOption('--mcmc-iter',
         dest="mcmc_iter",
         type='str',
         default="10000",
-        help='How many RevBayes MCMC iterations (or 100x BEAST iterations) should we use?')
+        help='How many RevBayes MCMC iterations (100x for BEAST) should we use?')
 
 Script.AddOption('--mcmc-thin',
         dest="mcmc_thin",
         type='str',
         default="10",
-        help='What RevBayes MCMC thinning frequency (or 100x BEAST thinning frequency) should we use?')
+        help='What RevBayes MCMC thinning frequency (100x for BEAST) should we use?')
 
 # post-processing arguments
 
