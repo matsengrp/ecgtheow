@@ -1,3 +1,6 @@
+This repository contains software components used for the manuscript *Rapid development of an infant-derived HIV-1 broadly neutralizing antibody lineage* by Simonich, Doepker, et al.
+It is not configured for use on data besides that used in the paper, although it could be adapted for other data with some work.
+
 # Requirements
 
 Conda (Miniconda) package manager
