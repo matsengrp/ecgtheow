@@ -1,7 +1,2 @@
-data
-inferences
-runs
+.sconsign.dblite
 *.pyc
-*.log
-outdir
-output
