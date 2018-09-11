@@ -3,17 +3,12 @@ It is not configured for use on data besides that used in the paper, although it
 
 # Requirements
 
-Conda (Miniconda) package manager
-
-C++ compiler
-
-Java SE Runtime Environment (version 1.8.0.92 or above)
-
-BEAST (version 1.8.4 or above) (http://beast.community/)
-
-FastTree (http://www.microbesonline.org/fasttree/)
-
-An X server or xvfb-run, necessary for ete3
+* Conda (Miniconda) package manager
+* C++ compiler
+* Java SE Runtime Environment (version 1.8.0.92 or above)
+* BEAST (version 1.8.4 or above) (http://beast.community/)
+* FastTree (http://www.microbesonline.org/fasttree/)
+* An X server or xvfb-run, necessary for ete3
 
 # Installation
 
