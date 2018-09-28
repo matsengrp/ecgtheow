@@ -48,7 +48,7 @@ if __name__ == '__main__':
         '--nfilters', nargs='+', required=True, type=int,
         help="Only display edges with at least this many samples.")
     parser.add_argument(
-        '--tree-schema', type=str, required=True, default="nexus",
+        '--tree-schema', type=str, default="nexus",
         help="What tree schema are we using?")
     parser.add_argument(
         '--output-base', type=str, required=True,
