@@ -36,6 +36,7 @@ The most important command line arguments are described in the following table:
 | `--data-dir` | For CFT, what data directory should we use? |
 | `--sample` | For CFT, what data sample should we use? |
 | `--seed` | For CFT, what seed should we use? |
+| `--nprune` | For CFT, how many sequences should we keep from the clonal family (defaults to 100)? |
 | `--run-beast` | Should we run BEAST inference? |
 | `--run-revbayes` | Should we run RevBayes inference? |
 | `--mcmc-iter` | How many RevBayes MCMC iterations (100x for BEAST) should we use (defaults to 10000)? |
