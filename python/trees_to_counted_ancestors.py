@@ -48,6 +48,9 @@ if __name__ == '__main__':
         '--nfilters', nargs='+', required=True, type=int,
         help="Only display edges with at least this many samples.")
     parser.add_argument(
+        '--tree-schema', type=str, required=True, default="nexus",
+        help="What tree schema are we using?")
+    parser.add_argument(
         '--output-base', type=str, required=True,
         help="The output basename.")
 
@@ -68,7 +71,7 @@ if __name__ == '__main__':
     source_files = [args.tree_path]
     tree_yielder = dendropy.Tree.yield_from_files(
         files=source_files,
-        schema='nexus',
+        schema=args.tree_schema,
         preserve_underscores=True
     )
 
