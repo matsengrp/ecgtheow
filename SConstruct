@@ -149,6 +149,12 @@ Script.AddOption("--seed",
         default=None,
         help="What seed should we use? - CFT")
 
+Script.AddOption("--other-partition-id",
+        dest="other_partition_id",
+        type="str",
+        default=None,
+        help="A string specifying the key/name of the partition file to use in the seed's other-partitions if they exist in the partis output file. - CFT")
+
 Script.AddOption('--nprune',
         dest="nprune",
         type='str',
@@ -240,6 +246,7 @@ def get_options(env):
         data_dir = env.GetOption("data_dir"),
         sample = env.GetOption("sample"),
         seed = env.GetOption("seed"),
+        other_partition_id = env.GetOption("other_partition_id"),
         nprune = [int(x) for x in env.GetOption("nprune").split(",")],
 
         # BEAST/RevBayes inference arguments
@@ -409,9 +416,11 @@ elif options["cft_data"]:
             path.join(outdir, "cluster_seqs.fasta"),
             path.join(options["data_dir"], "info.yaml"),
             "python/parse_partis_data.py " + options["data_dir"] \
-                    + " --sample " + options["sample"] \
-                    + " --seed " + options["seed"] \
-                    + " --output-path $TARGET")
+                    +  " --sample " + options["sample"] \
+                    +  " --seed " + options["seed"] \
+                    # the '=' is needed for other-partition-id's that start with '-'
+                    + (" --other-partition-id=" + options["other_partition_id"] if options["other_partition_id"] is not None else '') \
+                    +  " --output-path $TARGET")
         env.Depends(cluster_seqs, "python/parse_partis_data.py")
         env.Depends(cluster_seqs, "lib/cft/bin/process_partis.py")
         return cluster_seqs

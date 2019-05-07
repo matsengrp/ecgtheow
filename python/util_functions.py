@@ -1,4 +1,5 @@
 
+import os
 from collections import OrderedDict
 
 from Bio.Alphabet import Gapped, IUPAC
@@ -44,3 +45,11 @@ def write_to_fasta(d, filename):
             f.write('>{}\n'.format(k))
             f.write('{}\n'.format(v))
         f.close()
+
+def getsuffix(fname):
+    '''
+    Get the suffix from a file name.
+    '''
+    if len(os.path.splitext(fname)) != 2:
+        raise Exception('couldn\'t split %s into two pieces using dot' % fname)
+    return os.path.splitext(fname)[1]
