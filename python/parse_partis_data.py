@@ -22,6 +22,10 @@ if __name__ == '__main__':
         '--other-partition-id', type=str,
         help="The key of the other partition to use from the seed's other-partitions if they exist.")
     parser.add_argument(
+        '--largest-cluster-across-partitions',
+        help='select the largest cluster across all partitions. Must include seed if partis was run with a seed.',
+        action="store_true")
+    parser.add_argument(
         '--output-path', type=str, required=True,
         help="Path to output FASTA file.")
 
@@ -44,6 +48,7 @@ if __name__ == '__main__':
     os.system("export PARTIS=${PWD%/}/lib/cft/partis;" +\
               "lib/cft/bin/process_partis.py" +\
               " --partition-file " + partition_path +\
+             (" --largest-cluster-across-partitions" if args.largest_cluster_across_partitions else '') +\
               " --seqs-out " + args.output_path +\
              (" --glfo-dir " + sample["glfo-dir"] if getsuffix(partition_path) == ".csv" else "") +\
               " --locus " + locus +\
